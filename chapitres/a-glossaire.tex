@@ -1,0 +1,22 @@
+\chapter{Glossaire métier}
+\label{chap:glossaire}
+
+\begin{description}[style=nextline,leftmargin=1.2cm,font=\normalfont\bfseries]
+  \item[Utilisateur] Compte applicatif IAM (login, email, rôles, actif). Pas un utilisateur Keycloak.
+  \item[Rôle] Une des valeurs \texttt{EXPLOITANT}, \texttt{RESPONSABLE\_EXPLOITATION}, \texttt{ATELIER}, \texttt{COMMERCIAL}, \texttt{CHAUFFEUR}, \texttt{ADMINISTRATEUR}.
+  \item[Site] Point de chargement / déchargement géolocalisé.
+  \item[Station] Point de distribution de carburant (distinct d'un Site).
+  \item[Commande] Demande commerciale client + lignes de marchandise.
+  \item[Dossier de transport] Unité transportable / facturable dérivée d'une commande confirmée.
+  \item[Segment] Arrêt de chargement ou déchargement sur un dossier.
+  \item[Voyage] Exécution physique (véhicule, remorque optionnelle, chauffeurs, trajets) pour un ou plusieurs dossiers.
+  \item[Affectation] Lien chauffeur $\leftrightarrow$ voyage (titulaire ou renfort).
+  \item[Prise de carburant] Ticket réel (litres, montant, station, statut BROUILLON / VALIDEE).
+  \item[Plan d'entretien] Planning préventif lié à un engin.
+  \item[Ordre de travail] Exécution atelier.
+  \item[Score de santé] Indicateur saisi ; statut dérivé serveur.
+  \item[Copilote IA] Assistant conversationnel via la façade Spring.
+  \item[Calcul d'itinéraire IA] Estimation distance / durée via OSRM (façade Spring).
+  \item[App Shell] Chrome fixe (sidebar + contenu) autour des écrans authentifiés.
+  \item[File du jour] File de travail priorisée sur le tableau de bord.
+\end{description}

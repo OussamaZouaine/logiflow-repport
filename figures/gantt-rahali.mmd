@@ -1,0 +1,28 @@
+gantt
+  title Planning individuel — RAHALI Hamza (Sécurité)
+  dateFormat YYYY-MM-DD
+  axisFormat %d/%m
+  tickInterval 2week
+  excludes weekends
+
+  section Conception sécurité
+  Exigences NF et menace modèle       :s0, 2026-02-10, 12d
+  Revue conception                    :milestone, m1, 2026-02-27, 0d
+
+  section Authentification
+  Keycloak realm clients OIDC         :s1, 2026-02-23, 14d
+  Angular OIDC PKCE                   :s2, 2026-03-02, 12d
+  Spring resource server JWT          :s3, 2026-03-09, 12d
+  RBAC six rôles métier               :s4, 2026-03-16, 10d
+
+  section Sécurité applicative
+  Deny-by-default API et validation   :s5, 2026-03-20, 10d
+  Frontière Spring Flask clés internes :s6, 2026-03-30, 10d
+  Durcissement cloud SSM tfsec        :s7, 2026-04-06, 12d
+  MFA et profils cloud                :s8, 2026-04-06, 10d
+
+  section Livraison
+  Démo intermédiaire                  :milestone, m2, 2026-03-27, 0d
+  Chapitre sécurité rapport           :r1, 2026-04-01, 21d
+  Démo finale                         :milestone, m3, 2026-04-22, 0d
+  Dépôt rapport                       :milestone, m4, 2026-04-25, 0d

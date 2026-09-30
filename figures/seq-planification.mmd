@@ -1,0 +1,16 @@
+sequenceDiagram
+  participant EXP as Exploitant
+  participant NG as Angular
+  participant SB as Spring_Boot
+  participant FL as Flask
+
+  EXP->>NG: Demande_propositions
+  NG->>SB: POST_ia_planification
+  SB->>SB: Assemble_dossiers_flotte
+  SB->>FL: POST_proposer
+  FL-->>SB: Options_voyage
+  SB->>SB: evaluerConformite
+  SB-->>NG: Propositions_filtrees
+  EXP->>NG: Choisit_une_option
+  NG->>SB: POST_voyages
+  SB-->>NG: Voyage_cree

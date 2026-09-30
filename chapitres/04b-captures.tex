@@ -1,0 +1,54 @@
+\chapter{Interfaces et captures d'écran}
+\label{chap:captures}
+
+Ce chapitre présente l'application Angular LogiFlow vue par un administrateur authentifié.
+Les captures suivent le parcours d'usage : connexion et shell, tableau de bord, cycle
+commande--dossier--voyage, flotte et exploitation, puis les deux usages principaux de l'IA.
+
+\section{Connexion et App Shell}
+
+L'entrée dans l'application passe par Keycloak (OIDC). Une fois authentifié, l'App Shell
+fixe la navigation (sidebar filtrée par rôle) et les raccourcis globaux (Copilote, File du jour).
+
+\figshot{01-connexion}{Écran de connexion : gateway vers Keycloak.}
+
+\figshot{02-app-shell}{App Shell après connexion : modules, Copilote et File du jour visibles.}
+
+\section{Tableau de bord}
+
+Le tableau de bord synthétise les modules accessibles (compteurs), la file du jour
+(exceptions prioritaires) et une répartition synthétique (ex.\ véhicules).
+
+\figshot{03-tableau-de-bord}{Tableau de bord chargé : aperçu KPI, file du jour et synthèse.}
+
+\section{Cycle commercial et transport}
+
+Le cycle métier commence par les commandes, se poursuit par le dossier transportable,
+puis le voyage (création assistée ou liste d'exécution avec carte OSRM).
+
+\figshot{04-liste-commandes}{Liste des commandes (recherche et filtres).}
+
+\figshot{05-fiche-dossier}{Fiche dossier de transport : segments, statut et marchandises.}
+
+\figshot{06-nouveau-voyage}{Nouveau voyage : choix du mode planification assistée (IA).}
+
+\figshot{07-liste-voyages}{Liste des voyages avec panneau d'itinéraire (OSRM).}
+
+\section{Flotte, carburant et maintenance}
+
+Les modules satellites couvrent le parc roulant, les prises de carburant et l'atelier.
+
+\figshot{08-fiche-vehicule}{Fiche véhicule (ex.\ ME-001-CE) : identification, marque, poids et statut Disponible.}
+
+\figshot{09-carburant}{Module carburant : prises et stations.}
+
+\figshot{10-maintenance}{Module maintenance : ordres de travail et plans d'entretien.}
+
+\section{Intelligence artificielle}
+
+Deux écrans illustrent l'IA côté utilisateur : le copilote conversationnel (façade Spring)
+et la planification assistée qui propose des voyages comparables.
+
+\figshot{11-copilote}{Copilote en ligne : question métier et réponse structurée (voyages en cours).}
+
+\figshot{12-planification-ia}{Planification assistée : propositions comparées et bouton de choix.}

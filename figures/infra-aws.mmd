@@ -1,0 +1,45 @@
+flowchart TB
+  Users((Utilisateurs))
+  GH[GitHub_Actions_OIDC]
+  GHCR[GHCR]
+  Groq[LLM_Groq]
+  OSRM[OSRM]
+  LE[Lets_Encrypt]
+
+  subgraph AWS [AWS_eu_west_3]
+    R53[Route53]
+    SSM[SSM_ParameterStore_SessionManager]
+    S3[(S3_sauvegardes)]
+    BUD[Budgets_Scheduler_20h]
+    subgraph VPC [VPC_10_20_0_0_16_public]
+      SG{{SG_80_443}}
+      EIP[Elastic_IP]
+      subgraph EC2 [EC2_t3_large_Ubuntu]
+        Caddy[Caddy_TLS]
+        FE[frontend_nginx]
+        BE[backend_Spring]
+        AI[ai_Flask]
+        KC[Keycloak]
+        PG[(Postgres_PostGIS_pgvector)]
+      end
+    end
+  end
+
+  Users -->|DNS| R53 --> EIP
+  Users -->|HTTPS| SG --> Caddy
+  Caddy --> FE
+  Caddy -->|api_SSE| BE
+  Caddy -->|auth| KC
+  BE --> AI
+  BE --> PG
+  AI --> PG
+  AI --> BE
+  KC --> PG
+  AI --> Groq
+  AI --> OSRM
+  Caddy -.-> LE
+  EC2 -->|pull| GHCR
+  EC2 --> SSM
+  EC2 --> S3
+  GH -->|OIDC_SSM| EC2
+  BUD -.-> EC2

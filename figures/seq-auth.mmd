@@ -1,0 +1,15 @@
+sequenceDiagram
+  participant U as Utilisateur
+  participant NG as Angular
+  participant KC as Keycloak
+  participant SB as Spring_Boot
+
+  U->>NG: Ouvre_connexion
+  NG->>KC: Authorization_Code_PKCE
+  U->>KC: Login_plus_MFA
+  KC-->>NG: Code
+  NG->>KC: Echange_token
+  KC-->>NG: Access_JWT
+  NG->>SB: API_Bearer_JWT
+  SB->>SB: Valide_signature_roles_MFA
+  SB-->>NG: 200_JSON

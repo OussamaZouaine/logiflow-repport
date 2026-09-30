@@ -1,0 +1,188 @@
+\chapter{Intelligence artificielle}
+\label{chap:ia}
+
+\section{Rôle du service}
+
+Les agents IA vivent dans le dépôt \repo{logiflow-ai-service} : une application \textbf{Flask~3}
+(Python~3.13, Gunicorn), appelée \emph{uniquement} par Spring Boot. Le navigateur n'appelle jamais
+ce service : Spring agit comme BFF et relaie notamment le flux SSE du copilote.
+
+Quatre capacités sont exposées sous le préfixe \texttt{/internal/ai/v1} :
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Copilote} --- conversations persistées, tool-calling vers Spring, RAG optionnel (pgvector), SSE ;
+  \item \textbf{Planification} --- solveur déterministe de voyages + rédaction LLM ;
+  \item \textbf{Maintenance prédictive} --- analyse déterministe (scores, anomalies) + synthèse LLM ;
+  \item \textbf{Itinéraire} --- distance / durée / segments via \textbf{OSRM} uniquement \cite{osrm}.
+\end{itemize}
+
+\figmmd{ia-architecture}{Architecture du service IA : Spring BFF, agents Flask, LLM cloud, OSRM et base \texttt{logiflow\_ai}.}
+
+\section{Organisation du code}
+
+\begin{table}[ht]
+\centering
+\caption{Organisation du dépôt \repo{logiflow-ai-service}.}
+\label{tab:ia-layout}
+\small
+\begin{tabular}{@{}lp{9.2cm}@{}}
+\toprule
+Zone & Contenu \\
+\midrule
+\texttt{app.py} / \texttt{wsgi.py} & Factory Flask, \texttt{GET /health}, point d'entrée Gunicorn \\
+\texttt{api/v1/} & Blueprints protégés (\texttt{copilot}, \texttt{planification}, \texttt{maintenance}, \texttt{itinerary}) \\
+\texttt{agents/} & Orchestrateurs et solveurs métier par agent \\
+\texttt{infrastructure/} & \texttt{LlmClient}, \texttt{OsrmClient}, \texttt{BackendClient}, SQLAlchemy, repos \\
+\texttt{security.py} & Vérification \texttt{X-Internal-Api-Key} (\texttt{hmac.compare\_digest}) \\
+\texttt{migrations/} & Alembic (schéma \texttt{copilote}, extension \texttt{vector}) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Principes de conception}
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Pas d'accès à la base TMS.} Planification, maintenance et itinéraire reçoivent tout le contexte dans le corps HTTP. Le copilote lit le métier uniquement via des \textbf{outils} Spring.
+  \item \textbf{Base propre} \texttt{logiflow\_ai} (PostgreSQL + \textbf{pgvector}, schéma \texttt{copilote}) : conversations, messages, appels d'outils, feedback, fragments de connaissance.
+  \item \textbf{Pas de JWT / Keycloak} dans Flask. Spring pose \texttt{X-Utilisateur-Id} et \texttt{X-Copilote-Contexte} pour les rappels d'outils.
+  \item \textbf{LLM cloud compatible OpenAI} (Groq par défaut via \texttt{LLM\_BASE\_URL} / \texttt{LLM\_API\_KEY} / \texttt{LLM\_MODEL}). Un LLM local (Ollama) a été écarté : trop lent sur CPU pour le streaming \cite{groq,ollama}.
+  \item \textbf{Calcul déterministe, LLM rédacteur.} Chiffres, horaires et scores ne dépendent jamais du LLM ; un gabarit texte prend le relais si le fournisseur est indisponible.
+\end{enumerate}
+
+\section{Authentification Spring $\leftrightarrow$ Flask}
+
+\begin{table}[ht]
+\centering
+\caption{Clés et en-têtes entre Spring et le service IA.}
+\label{tab:ia-auth}
+\begin{tabularx}{\linewidth}{@{}l X X@{}}
+\toprule
+Sens & En-tête / secret & Variable \\
+\midrule
+Spring $\rightarrow$ Flask & \texttt{X-Internal-Api-Key} &
+  Flask \texttt{INTERNAL\_API\_KEY} $=$ Spring \texttt{AI\_SERVICE\_API\_KEY} \\
+Flask $\rightarrow$ Spring (outils) & \texttt{X-Internal-Api-Key} (clé distincte) &
+  Flask \texttt{BACKEND\_CALLBACK\_API\_KEY} $=$ Spring \texttt{AI\_SERVICE\_CALLBACK\_API\_KEY} \\
+Contexte outils & \texttt{X-Copilote-Contexte} & Jeton opaque fourni par Spring \\
+Identité UI & \texttt{X-Utilisateur-Id} & Posé après validation JWT \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+La route publique \texttt{GET /health} (hors préfixe v1) expose l'état du processus, du LLM
+(\texttt{UP}, \texttt{CLE\_ABSENTE}, \texttt{DOWN}\ldots) et de la base, sans clé --- utilisée par le
+front (badge « En ligne ») et les healthchecks de déploiement.
+
+\section{Agents et contrats}
+
+\begin{table}[ht]
+\centering
+\caption{Agents IA : routes Flask internes et exposition Spring (navigateur).}
+\label{tab:agents}
+\renewcommand{\arraystretch}{1.35}
+\begin{tabularx}{\linewidth}{@{}>{\bfseries}l X@{}}
+\toprule
+Agent & Endpoints \\
+\midrule
+Copilote &
+  \textbf{Flask :} \texttt{/internal/ai/v1/copilot/conversations/**}\newline
+  \quad (messages en \texttt{text/event-stream}, SSE)\newline
+  \textbf{Spring :} \texttt{/api/v1/ia/copilote/**} \\
+Planification &
+  \textbf{Flask :} \texttt{POST .../planification/proposer}\newline
+  \textbf{Spring :} \texttt{POST .../ia/planification/propositions} \\
+Itinéraire &
+  \textbf{Flask :} \texttt{POST .../itinerary/calculer}\newline
+  \textbf{Spring :} \texttt{POST .../ia/itineraires/calcul} \\
+Maintenance &
+  \textbf{Flask :} \texttt{POST .../maintenance/recommander}\newline
+  \textbf{Spring :} \texttt{POST .../ia/maintenance/analyse} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\caption{Répartition déterministe / LLM par agent.}
+\label{tab:ia-det-llm}
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+Agent & Déterministe & LLM \\
+\midrule
+Copilote & Persistance SQL, exécution d'outils & Boucle tool-calling + streaming \\
+Planification & Groupage, matrice OSRM/Haversine, horaires & Comparaison et justifications \\
+Maintenance & Scores, échéances, anomalies & Synthèse textuelle \\
+Itinéraire & OSRM \texttt{/route} uniquement & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Séquence copilote}
+
+Spring ouvre un flux SSE ; Flask charge l'historique, récupère le catalogue d'outils
+(\texttt{GET /internal/copilote/outils}), boucle jusqu'à \texttt{COPILOTE\_MAX\_ITERATIONS\_OUTILS}
+(défaut~4), exécute les outils via Spring (\texttt{POST /internal/copilote/outils/\{nom\}}),
+puis streame les jetons. Événements SSE : \texttt{meta}, \texttt{attente}, \texttt{outil},
+\texttt{token}, \texttt{sources}, \texttt{titre}, \texttt{fin}, \texttt{erreur}.
+
+Outils métier typiques (Spring) : recherche dossiers / voyages / commandes / clients / chauffeurs,
+proposition de voyages, consultation maintenance, consommation carburant. Outil local Flask
+(si embeddings configurés) : \texttt{rechercher\_base\_connaissance}.
+
+\figmmd{seq-copilote}{Séquence du copilote : Angular $\rightarrow$ Spring $\rightarrow$ Flask $\rightarrow$ outils Spring $\rightarrow$ LLM cloud (SSE).}
+
+\section{Planification assistée}
+
+Le solveur groupe les dossiers candidats, calcule une matrice de distances OSRM
+(repli Haversine~$\times$~1,3), pose créneaux / pauses / équipage, puis le LLM rédige
+justifications et comparaison (\texttt{source\_redaction}). Spring \textbf{réévalue la conformité}
+avant restitution à l'UI ; la création du voyage reste une mutation TMS explicite.
+
+\figmmd{seq-planification}{Séquence de planification assistée avec contrôle de conformité côté Spring.}
+
+\section{Itinéraire et maintenance}
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Itinéraire} : client OSRM HTTP ; réponse \textbf{503} si OSRM indisponible (aucun trajet inventé).
+  \item \textbf{Maintenance} : score de risque, échéances de plans OT, anomalies (documents, sinistralité, surconsommation) calculés en déterministe ; le LLM synthétise ; gabarit si LLM down.
+\end{itemize}
+
+\section{Schéma de données copilote}
+
+La base \texttt{logiflow\_ai} est distincte de la base TMS. Le schéma PostgreSQL \texttt{copilote}
+est géré par Alembic (extension \texttt{vector}).
+
+\figmmd{ia-schema}{Schéma relationnel du domaine copilote (conversations, messages, outils, RAG).}
+
+\begin{itemize}[leftmargin=*]
+  \item \texttt{conversation} --- fil de discussion par \texttt{utilisateur\_id} ;
+  \item \texttt{message} --- rôles \texttt{user}/\texttt{assistant}, \texttt{sources} JSONB, tokens, modèle ;
+  \item \texttt{appel\_outil} --- journal des tool-calls (nom, arguments, succès, durée) ;
+  \item \texttt{feedback} --- note optionnelle sur un message ;
+  \item \texttt{document\_connaissance} / \texttt{fragment\_connaissance} --- RAG avec colonne \texttt{embedding}.
+\end{itemize}
+
+\section{Stack et configuration}
+
+\begin{table}[ht]
+\centering
+\caption{Stack du service \repo{logiflow-ai-service}.}
+\label{tab:ia-stack}
+\begin{tabular}{@{}ll@{}}
+\toprule
+Composant & Choix \\
+\midrule
+Runtime & Python 3.13, uv, Flask 3, Gunicorn (gthread, SSE) \\
+Validation & Pydantic v2 (snake\_case Python / camelCase JSON) \\
+Persistance & SQLAlchemy 2, Alembic, PostgreSQL + pgvector \\
+LLM & API compatible OpenAI (Groq par défaut) \\
+HTTP sortant & httpx (Spring, OSRM, LLM) \\
+Routing & OSRM (\texttt{OSRM\_BASE\_URL}) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Variables clés : \texttt{INTERNAL\_API\_KEY}, \texttt{DATABASE\_URL}, \texttt{LLM\_*},
+\texttt{EMBED\_*} (optionnel), \texttt{BACKEND\_BASE\_URL}, \texttt{BACKEND\_CALLBACK\_API\_KEY},
+\texttt{COPILOTE\_MAX\_ITERATIONS\_OUTILS}, \texttt{COPILOTE\_BATTEMENT\_S}, \texttt{OSRM\_*}.

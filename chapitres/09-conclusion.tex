@@ -1,0 +1,50 @@
+\chapter{Conclusion et perspectives}
+\label{chap:conclusion}
+
+\section{Bilan}
+
+Ce projet tutoré a permis de concevoir LogiFlow, un TMS routier cohérent sur le plan
+architectural : domaine explicite (commande $\rightarrow$ dossier $\rightarrow$ voyage),
+monolithe modulaire hexagonal, SPA Angular filtrée par rôle, agents IA isolés derrière un
+BFF Spring, et infrastructure AWS reproductible (une EC2, Terraform, Ansible, SSM) sans SSH exposé.
+
+Les diagrammes de ce rapport synthétisent les décisions structurantes : isolation de Flask,
+validation JWT Keycloak, graphe Modulith, topologie VPC / Caddy / Compose, et pipeline
+GHCR $\rightarrow$ SSM.
+
+\section{Apports pour l'équipe}
+
+\begin{itemize}[leftmargin=*]
+  \item Conception métier et glossaire partagé.
+  \item Architecture logicielle (DDD léger, hexagonal, Modulith).
+  \item Full-stack (Angular + Spring + PostgreSQL).
+  \item Intégration d'agents IA (Flask, LLM cloud, OSRM, outils Spring) avec contraintes de sécurité.
+  \item Infrastructure as code et culture DevSecOps (OIDC GitHub, SSM, scans CI).
+\end{itemize}
+
+\section{Difficultés rencontrées}
+
+Plusieurs frictions ont structuré nos arbitrages. Brancher correctement Keycloak
+(OIDC + PKCE) de bout en bout --- frontend, issuer public, JWKS interne, profils Spring
+\texttt{dev}/prod --- a demandé une configuration stricte pour que le local reproduise le
+cloud. Côté IA, la latence d'un LLM local a conduit à adopter un fournisseur cloud et à
+séparer calcul déterministe / rédaction ; le streaming SSE a dû être préservé de bout en
+bout (Caddy \texttt{flush\_interval}, Gunicorn gthread). Sur l'infrastructure, le budget
+étudiant a motivé le choix d'une seule EC2 sans NAT, au prix d'une surface réseau différente
+d'une architecture multi-tiers classique --- documentée dans les ADR. Enfin, la coordination
+de quatre dépôts (front, back, IA, infra) a nécessité des contrats d'API stables et des
+revues régulières avec l'encadrant.
+
+\section{Perspectives}
+
+\begin{enumerate}[leftmargin=*]
+  \item Activer MFA Keycloak de bout en bout sur tous les comptes cloud.
+  \item Renforcer Spring $\leftrightarrow$ Flask (mTLS ou OAuth2 client-credentials).
+  \item Enrichir le copilote (outils, RAG) et la planification (contraintes métier avancées).
+  \item Extraire un module (\texttt{planning} ou \texttt{tracking}) en service séparé
+        \emph{seulement} si la charge le justifie --- les frontières \texttt{api} sont déjà prêtes.
+  \item Industrialiser le monitoring (métriques, alertes) au-delà des healthchecks et budgets AWS.
+\end{enumerate}
+
+LogiFlow constitue ainsi une base solide pour poursuivre le développement et une
+industrialisation progressive.

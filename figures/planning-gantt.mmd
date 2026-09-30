@@ -1,0 +1,46 @@
+gantt
+  title Planning projet tutoré LogiFlow — sprints et jalons
+  dateFormat YYYY-MM-DD
+  axisFormat %d/%m
+  tickInterval 2week
+  excludes weekends
+
+  section Cadre
+  Kick-off et cadrage                 :milestone, m0, 2026-02-02, 0d
+  Organisation équipe et outils       :c0, 2026-02-02, 5d
+
+  section Conception
+  Cahier des charges / backlog        :c1, 2026-02-03, 10d
+  Modèle métier et glossaire          :c2, after c1, 8d
+  Exigences F et NF + use cases       :c3, 2026-02-10, 10d
+  Revue conception                    :milestone, m1, 2026-02-27, 0d
+
+  section Backend
+  Socle Modulith IAM référentiels     :b1, 2026-02-23, 14d
+  Cycle commande dossier voyage       :b2, after b1, 16d
+  Flotte tracking carburant maint.    :b3, 2026-03-16, 14d
+  Façade IA et sécurité JWT           :b4, 2026-03-23, 12d
+
+  section Frontend
+  App Shell RBAC navigation           :f1, 2026-02-23, 12d
+  Écrans listes et fiches métier      :f2, after f1, 18d
+  Tableau de bord et File du jour     :f3, 2026-03-20, 10d
+  Copilote UI et nouveau voyage       :f4, 2026-03-30, 10d
+
+  section Intelligence artificielle
+  Service Flask santé et config       :a1, 2026-03-16, 7d
+  Copilote SSE outils                 :a2, after a1, 12d
+  Planification et itinéraire OSRM    :a3, 2026-03-30, 10d
+  Maintenance prédictive              :a4, 2026-04-06, 8d
+
+  section Infra et qualité
+  Terraform VPC et instances          :i1, 2026-03-16, 12d
+  Ansible déploiement GHCR            :i2, after i1, 10d
+  Keycloak MFA et durcissement        :i3, 2026-04-06, 10d
+  Tests CI et correctifs              :q1, 2026-04-06, 14d
+
+  section Livraison
+  Démo intermédiaire                  :milestone, m2, 2026-03-27, 0d
+  Rédaction rapport                   :r1, 2026-04-01, 21d
+  Démo finale                         :milestone, m3, 2026-04-22, 0d
+  Dépôt rapport                       :milestone, m4, 2026-04-25, 0d

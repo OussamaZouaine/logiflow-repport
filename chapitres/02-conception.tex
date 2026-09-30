@@ -1,0 +1,138 @@
+\chapter{Conception métier}
+\label{chap:conception}
+
+\section{Problème}
+
+Un TMS routier doit relier trois niveaux que les équipes mélangent souvent :
+
+\begin{enumerate}[leftmargin=*]
+  \item le \textbf{commercial} : une commande client, des lignes de marchandise, un statut ;
+  \item le \textbf{transportable} : un dossier issu d'une commande confirmée, avec segments de chargement et de déchargement sur des sites géolocalisés ;
+  \item l'\textbf{exécution} : un voyage (ressources + trajet), le suivi, le carburant, la maintenance.
+\end{enumerate}
+
+LogiFlow pose ces objets comme des agrégats distincts, chacun dans un module backend, plutôt qu'un enregistrement unique « mission ».
+
+\figmmd{cycle-metier}{Cycle métier LogiFlow : du client au voyage, avec flotte, suivi, carburant et maintenance.}
+
+\section{Acteurs et rôles}
+
+Un \textbf{Utilisateur} est un compte applicatif du module \texttt{iam} (login, email, rôles, flag actif). Ce n'est ni un utilisateur Keycloak ni un enregistrement de mot de passe. Les rôles portés sont :
+
+\begin{center}
+\texttt{EXPLOITANT}, \texttt{RESPONSABLE\_EXPLOITATION}, \texttt{ATELIER},\\
+\texttt{COMMERCIAL}, \texttt{CHAUFFEUR}, \texttt{ADMINISTRATEUR}.
+\end{center}
+
+Le JWT Keycloak expose ces rôles sous la forme \texttt{ROLE\_*} (ou claims \texttt{roles} / \texttt{realm\_access.roles}). Le \textbf{provisioning} d'un vrai compte n'est pas une inscription libre : seul un \texttt{ADMINISTRATEUR} crée un Utilisateur via \texttt{POST /api/v1/utilisateurs}.
+
+\figmmd{use-cases}{Cas d'usage principaux par rôle applicatif.}
+
+\section{Exigences fonctionnelles}
+
+\begin{table}[ht]
+\centering
+\caption{Exigences fonctionnelles principales.}
+\label{tab:ef}
+\begin{tabular}{@{}cp{3.2cm}p{8cm}@{}}
+\toprule
+Id & Thème & Description \\
+\midrule
+EF-01 & Référentiels & Gérer sites, clients, marchandises, stations. \\
+EF-02 & Commercial & Créer / confirmer des commandes et lignes. \\
+EF-03 & Dossiers & Ouvrir un dossier depuis une commande confirmée. \\
+EF-04 & Planning & Créer un voyage, affecter flotte et chauffeurs. \\
+EF-05 & Suivi & Enregistrer les événements d'exécution. \\
+EF-06 & Carburant & Saisir et valider des prises de carburant. \\
+EF-07 & Maintenance & Plans, ordres de travail, scores de santé. \\
+EF-08 & Documents & Attacher des fichiers aux entités. \\
+EF-09 & IA & Copilote, propositions de planning, itinéraire. \\
+EF-10 & IAM & Provisionner utilisateurs et rôles. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Exigences non fonctionnelles}
+
+\begin{table}[ht]
+\centering
+\caption{Exigences non fonctionnelles.}
+\label{tab:enf}
+\begin{tabular}{@{}cp{3.2cm}p{8cm}@{}}
+\toprule
+Id & Thème & Description \\
+\midrule
+ENF-01 & Sécurité & JWT OIDC, MFA IdP, moindre privilège réseau. \\
+ENF-02 & Modularité & Frontières Modulith + ArchUnit en CI. \\
+ENF-03 & Isolation IA & Flask inaccessible depuis Internet. \\
+ENF-04 & Erreurs & Problèmes HTTP normalisés (RFC~7807). \\
+ENF-05 & IaC & Infra AWS reproductible (Terraform). \\
+ENF-06 & Observabilité & Health checks, journal des interactions IA. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Cycle de vie du transport}
+
+\begin{table}[ht]
+\centering
+\caption{Concepts métier centraux et module propriétaire.}
+\label{tab:concepts}
+\begin{tabular}{@{}llp{6.2cm}@{}}
+\toprule
+Concept & Module & Définition \\
+\midrule
+Commande & \texttt{order} & Demande commerciale d'un client. \\
+Dossier de transport & \texttt{dossier} & Unité transportable et facturable. \\
+Voyage & \texttt{planning} & Exécution physique : ressources pour 1..n dossiers. \\
+Trajet & \texttt{planning} & Séquence ordonnée d'étapes. \\
+Groupage & \texttt{planning} & Plusieurs dossiers sur un même voyage. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Un \textbf{Site} est un point de chargement ou de déchargement géolocalisé (WGS-84). Une \textbf{Station} (carburant) n'est \emph{pas} un Site : décision d'architecture séparée (annexe~\ref{chap:adr}).
+
+Un dossier porte des \textbf{segments} (au moins un chargement et un déchargement). Un voyage porte une \textbf{affectation} chauffeur (titulaire ou renfort) et éventuellement une remorque, utilisée pour le taux de remplissage.
+
+\section{Référentiels associés}
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Véhicule} (tracteur, porteur, fourgon) vs \textbf{Remorque} (semi-remorque, capacités).
+  \item \textbf{Chauffeur} (référentiel RH / conformité) distinct du rôle applicatif \texttt{CHAUFFEUR}.
+  \item \textbf{Marchandise} (catalogue, métadonnées ADR) référencée par id sur la ligne de commande.
+  \item \textbf{Plan d'entretien} (préventif) vs \textbf{ordre de travail} (exécution) vs \textbf{score de santé} (statut dérivé côté serveur).
+  \item \textbf{Document} : pièce jointe polymorphe (\texttt{typeEntite} + \texttt{entiteId}).
+\end{itemize}
+
+\section{Expérience utilisateur cible}
+
+L'\textbf{App Shell} offre une sidebar de navigation filtrée par rôle, un pied de sidebar avec identité et déconnexion, et une barre utilitaire (fil d'Ariane, copilote IA, badge File du jour). Le \textbf{Tableau de bord} combine un aperçu (compteurs / statuts) et une \textbf{File du jour} (file de travail priorisée). Une palette de commandes (\texttt{Ctrl/Cmd+K}) accélère la navigation.
+
+\section{Diagrammes de conception UML}
+
+Cette section regroupe les vues UML utilisées pour figer le domaine avant le découpage technique (chapitres suivants).
+
+\subsection{Diagramme de cas d'utilisation}
+
+\figmmd{usecase-uml}{Diagramme de cas d'utilisation LogiFlow : acteurs (rôles) et cas d'usage du système.}
+
+Le diagramme précédent (figure~\ref{fig:use-cases}) montrait les liens de façon compacte ; la figure~\ref{fig:usecase-uml} reprend une présentation plus proche d'un use-case UML classique (système encapsulé, acteurs autour, enchaînements métier commande~$\rightarrow$~dossier~$\rightarrow$~voyage).
+
+\subsection{Diagramme de classes (domaine)}
+
+\figmmd{class-metier}{Diagramme de classes métier (cœur TMS) : Client, Commande, Dossier, Voyage, flotte et satellites.}
+
+Les associations suivent les règles du glossaire : une commande confirmée génère un dossier ; un voyage groupe un ou plusieurs dossiers ; chauffeur et véhicule sont liés au voyage via l'affectation (pas un agrégat unique « mission »).
+
+Chaque lien est porté par un attribut de type \texttt{FK} sur la classe dépendante (\texttt{voyageId} et \texttt{chauffeurId} sur Affectation, \texttt{dossierIds} sur Voyage). Le losange plein marque un objet contenu dans son parent : ligne de commande, segment, affectation. \texttt{remorqueId} reste optionnel (cardinalité \texttt{0..1}).
+
+\subsection{Diagramme de séquence métier}
+
+\figmmd{seq-commande-voyage}{Séquence métier : création / confirmation de commande, ouverture de dossier, planification et démarrage de voyage.}
+
+\subsection{Diagramme d'états}
+
+Ces états sont volontairement synthétiques : chaque agrégat (commande, dossier, voyage) possède son propre enum de statut côté code ; le schéma ci-dessous montre le \emph{fil conducteur} perçu par l'exploitation.
+
+\figmmdhere{etat-cycle}{Machine d'états du cycle commande~$\rightarrow$~dossier~$\rightarrow$~voyage jusqu'à livraison.}

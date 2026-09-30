@@ -1,0 +1,107 @@
+\chapter{Infrastructure}
+\label{chap:infra}
+
+\section{Objectifs et choix structurants}
+
+Le dépôt \repo{logiflow-infra} provisionne et déploie un environnement de démonstration sur AWS
+(\texttt{eu-west-3}). Principes :
+
+\begin{itemize}[leftmargin=*]
+  \item infrastructure as code (\textbf{Terraform}) et configuration as code (\textbf{Ansible}) ;
+  \item images applicatives construites en CI et poussées sur \textbf{GHCR} --- jamais buildées sur le serveur ;
+  \item administration \textbf{sans SSH public} (AWS Systems Manager) \cite{awsssm} ;
+  \item \textbf{une seule EC2} (\texttt{t3.large}) hébergeant toute la stack Docker Compose
+        (ADR « instance unique ») --- choix volontaire pour contenir les coûts étudiants,
+        plutôt que trois machines FE / BE / AI.
+\end{itemize}
+
+\section{Topologie AWS}
+
+\begin{itemize}[leftmargin=*]
+  \item VPC \texttt{10.20.0.0/16}, \textbf{un sous-réseau public}, Internet Gateway, Elastic IP ;
+  \item \textbf{pas de NAT Gateway} (économie ~35~\$/mois) : la sortie Internet se fait depuis l'EC2 publique ;
+  \item security group \texttt{logiflow-prod-serveur} : ingress \textbf{TCP 80 et 443} uniquement ;
+        aucun port 22 ;
+  \item reverse proxy \textbf{Caddy} (TLS Let's Encrypt, HTTP/2--3) devant frontend, backend et Keycloak ;
+  \item conteneurs internes : Angular/nginx, Spring Boot, Flask IA, Keycloak, PostgreSQL
+        (PostGIS + pgvector, trois bases : \texttt{logiflow}, \texttt{logiflow\_ai}, \texttt{keycloak}).
+\end{itemize}
+
+\figmmd{infra-aws}{Topologie AWS réelle : une EC2 publique, Caddy, stack Docker, SSM, GHCR et LLM cloud.}
+
+\subsection{Routage Caddy (même origine)}
+
+L'UI et l'API partagent \texttt{https://app.<domaine>} : pas de CORS navigateur.
+\texttt{/api/*} est proxifié vers Spring avec \texttt{flush\_interval -1} pour le SSE copilote.
+Keycloak est servi sur \texttt{https://auth.<domaine>}.
+
+\section{Modules Terraform}
+
+\begin{table}[ht]
+\centering
+\caption{Modules Terraform de \repo{logiflow-infra}.}
+\label{tab:tf-modules}
+\small
+\begin{tabular}{@{}lp{8.8cm}@{}}
+\toprule
+Module & Ressources principales \\
+\midrule
+\texttt{bootstrap} & État S3 (verrou natif), OIDC GitHub, rôles IAM CI, zone Route~53 \\
+\texttt{reseau} & VPC, subnet public, IGW, table de routes \\
+\texttt{serveur} & EC2 Ubuntu 24.04, EIP, SG, instance profile SSM, alarme CloudWatch \\
+\texttt{dns} & Enregistrements A \texttt{app}, \texttt{auth}, racine, \texttt{www} \\
+\texttt{secrets} & SSM Parameter Store \texttt{/logiflow/prod/secrets/*} et \texttt{/config/*} \\
+\texttt{sauvegardes} & Buckets S3 (rétention courte) + scripts de dump \\
+\texttt{couts} & AWS Budgets, EventBridge Scheduler (arrêt auto 20~h) \\
+\texttt{securite} & GuardDuty, Access Analyzer, CloudTrail, VPC Flow Logs, SNS \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Ansible et stack runtime}
+
+Playbook \texttt{site.yml} : rôles \texttt{base} $\rightarrow$ \texttt{docker} $\rightarrow$
+\texttt{securite} $\rightarrow$ \texttt{logiflow} $\rightarrow$ \texttt{sauvegardes}.
+Le rôle \texttt{logiflow} lit SSM, dépose la stack sous \texttt{/opt/logiflow}, authentifie GHCR
+et exécute \texttt{bin/deployer.sh} (\texttt{docker compose pull} + healthchecks).
+
+Images typiques : \texttt{ghcr.io/.../logiflow-\{frontend,backend,ai-service,keycloak,postgres\}}.
+Mémoires plafonnées (~4,5~Go utiles sur 8~Go) pour cohabiter sur la \texttt{t3.large}.
+
+\section{Secrets et IAM}
+
+\begin{itemize}[leftmargin=*]
+  \item Secrets générés par Terraform (\texttt{random\_password}) : DB, Keycloak, clés API internes AI ;
+  \item stockage dans \textbf{SSM Parameter Store} (SecureString), jamais dans Git ;
+  \item clé LLM injectée hors apply (\texttt{lifecycle.ignore\_changes}) ;
+  \item CI GitHub via \textbf{OIDC} uniquement (rôles \texttt{logiflow-github-terraform} et
+        \texttt{logiflow-github-deploiement}) --- pas de clés AWS longue durée.
+\end{itemize}
+
+\section{Pipeline de déploiement}
+
+\figmmd{deploy}{Enchaînement Terraform (OIDC) $\rightarrow$ images GHCR $\rightarrow$ Ansible / SSM Run Command.}
+
+\begin{enumerate}[leftmargin=*]
+  \item Bootstrap ponctuel (bucket state, OIDC, Route~53).
+  \item \texttt{terraform apply} sur \texttt{environments/prod} (manuel, environnement GitHub protégé).
+  \item Build CI des dépôts applicatifs $\rightarrow$ tags GHCR.
+  \item Workflow \texttt{deployer.yml} : démarre l'EC2 si arrêtée, \texttt{ssm:SendCommand},
+        pull Compose, healthchecks.
+\end{enumerate}
+
+\section{CI infra}
+
+\begin{itemize}[leftmargin=*]
+  \item \texttt{qualite.yml} : \texttt{terraform fmt/validate}, tflint, ansible-lint, shellcheck, validation Compose/Caddy ;
+  \item \texttt{terraform.yml} : plan commenté sur PR ; apply manuel ;
+  \item \texttt{deployer.yml} : déploiement SSM ;
+  \item \texttt{securite.yml} / \texttt{dast.yml} : Gitleaks, Trivy, CodeQL, ZAP.
+\end{itemize}
+
+\section{Coûts}
+
+L'enveloppe cible est de l'ordre de 70~\$/mois. Des postes fixes subsistent même EC2 arrêtée
+(EBS, EIP, Route~53, alarmes). Leviers principaux : \textbf{pas de NAT}, arrêt automatique à 20~h
+(EventBridge), éventuel passage en \texttt{t3.medium}, rétention S3 courte. Le coût du fournisseur
+LLM reste proportionnel à l'usage.

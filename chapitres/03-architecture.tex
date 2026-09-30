@@ -1,0 +1,51 @@
+\chapter{Architecture d'ensemble}
+\label{chap:architecture}
+
+\section{Principe directeur}
+
+Trois règles structurent tout le système :
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Le navigateur ne parle qu'à Spring Boot.} Angular n'appelle jamais Flask. Le service IA n'a pas d'IP publique ; seuls les security groups internes l'autorisent depuis le backend.
+  \item \textbf{Flask n'a pas la base TMS.} Tout le contexte métier est assemblé par Spring (modules via leur package \texttt{api}) puis envoyé dans le corps HTTP interne.
+  \item \textbf{L'identité utilisateur s'arrête au backend.} Flask ne voit pas le JWT. Entre Spring et Flask, une clé d'API de service (\texttt{X-Internal-Api-Key}) suffit ; les outils du copilote rappellent Spring avec une clé de callback.
+\end{enumerate}
+
+\section{Vue conteneurs}
+
+\figmmd{c4-containers}{Vue conteneurs LogiFlow : Angular, Keycloak, Spring Boot, PostgreSQL, Flask, LLM cloud et OSRM.}
+
+\begin{table}[ht]
+\centering
+\caption{Technologies par conteneur.}
+\label{tab:stack}
+\begin{tabular}{@{}ll@{}}
+\toprule
+Conteneur & Stack \\
+\midrule
+Frontend & Angular 22, Tailwind 4, Zard UI, OIDC client \\
+Backend & Java 21, Spring Boot, Modulith, JPA, Flyway \\
+Base TMS & PostgreSQL (+ PostGIS) \\
+Service IA & Python 3.13, Flask, LLM cloud (Groq\ldots), OSRM, pgvector \\
+Identité & Keycloak (OIDC Authorization Code + PKCE) \\
+Infra & AWS EC2, Terraform, Ansible, GHCR \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Flux d'une requête}
+
+\figmmd{flux-global}{Flux global d'une requête utilisateur, y compris le chemin IA interne.}
+
+L'utilisateur atteint le frontend (nginx + Angular) en HTTPS. Le frontend appelle \texttt{/api/v1/...} sur Spring avec un JWT. Pour le copilote ou l'itinéraire, Spring authentifie, charge le contexte, appelle Flask sur le port interne 8000, journalise l'interaction, et renvoie un DTO déjà mis en forme. Les erreurs suivent RFC~7807 \cite{rfc7807}.
+
+\section{Découpage « un processus, plusieurs frontières »}
+
+Le backend est un \textbf{seul} JAR / une seule image Docker, mais \textbf{plusieurs} modules métier (chapitre~\ref{chap:backend}). L'IA est un processus séparé parce qu'elle a un cycle de vie différent (dépendances Python, timeouts LLM, streaming SSE). L'infra est un dépôt séparé parce qu'un changement de VPC ne doit pas exiger un commit applicatif.
+
+\section{Environnements}
+
+\begin{description}[style=nextline,leftmargin=1.2cm]
+  \item[Local] Docker Compose (PostgreSQL, Keycloak, Flask). Frontend OIDC + backend profil \texttt{dev} : JWT Keycloak obligatoire, comme en production. Angular sur le port 4200 (proxy vers 8080).
+  \item[Cloud (AWS)] Une EC2 \texttt{t3.large} dans \texttt{eu-west-3} (VPC public, Elastic IP, SG 80/443), stack Docker Compose derrière Caddy (TLS), Keycloak sur \texttt{auth.<domaine>}. Administration par AWS SSM, aucun port 22 ouvert \cite{awsssm}. Pas de NAT Gateway (choix coût).
+\end{description}

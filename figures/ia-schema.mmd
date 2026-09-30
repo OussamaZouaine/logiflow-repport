@@ -1,0 +1,48 @@
+erDiagram
+  CONVERSATION ||--o{ MESSAGE : contient
+  MESSAGE ||--o{ APPEL_OUTIL : declenche
+  MESSAGE ||--o| FEEDBACK : note
+  DOCUMENT_CONNAISSANCE ||--o{ FRAGMENT_CONNAISSANCE : découpe
+
+  CONVERSATION {
+    uuid id PK
+    string utilisateur_id
+    string titre
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  MESSAGE {
+    uuid id PK
+    uuid conversation_id FK
+    string role
+    text contenu
+    string statut
+    jsonb sources
+    string modele
+    int tokens_prompt
+    int tokens_completion
+  }
+  APPEL_OUTIL {
+    uuid id PK
+    uuid message_id FK
+    string nom
+    jsonb arguments
+    bool succes
+    int duree_ms
+  }
+  FEEDBACK {
+    uuid message_id PK
+    smallint note
+    text commentaire
+  }
+  DOCUMENT_CONNAISSANCE {
+    uuid id PK
+    string titre
+    string source
+  }
+  FRAGMENT_CONNAISSANCE {
+    uuid id PK
+    uuid document_id FK
+    text contenu
+    vector embedding
+  }

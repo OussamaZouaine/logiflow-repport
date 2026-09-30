@@ -1,0 +1,28 @@
+gantt
+  title Planning individuel — STITOU Ibrahim (Chef de projet · Backend)
+  dateFormat YYYY-MM-DD
+  axisFormat %d/%m
+  tickInterval 2week
+  excludes weekends
+
+  section Pilotage
+  Kick-off et cadrage équipe          :crit, p0, 2026-02-02, 5d
+  Suivi planning et revues encadrant  :p1, 2026-02-09, 55d
+  Préparation démos et jalons         :p2, 2026-03-16, 30d
+
+  section Conception (coord.)
+  Backlog et priorisation             :c1, 2026-02-03, 10d
+  Revue conception                    :milestone, m1, 2026-02-27, 0d
+
+  section Backend
+  Socle Modulith IAM référentiels     :b1, 2026-02-23, 14d
+  Cycle commande dossier voyage       :b2, after b1, 16d
+  Flotte tracking carburant maint.    :b3, 2026-03-16, 14d
+  Façade IA et API BFF                :b4, 2026-03-23, 12d
+  Modèle données Flyway               :b5, 2026-02-23, 20d
+
+  section Livraison
+  Démo intermédiaire                  :milestone, m2, 2026-03-27, 0d
+  Contributions rapport backend       :r1, 2026-04-01, 21d
+  Démo finale                         :milestone, m3, 2026-04-22, 0d
+  Dépôt rapport                       :milestone, m4, 2026-04-25, 0d

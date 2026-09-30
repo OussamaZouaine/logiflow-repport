@@ -1,0 +1,103 @@
+classDiagram
+  direction LR
+
+  class Client {
+    +id UUID
+    +code String
+    +raisonSociale String
+    +actif Boolean
+  }
+  class Commande {
+    +id UUID
+    +clientId FK
+    +reference String
+    +statut StatutCommande
+  }
+  class LigneCommande {
+    +commandeId FK
+    +marchandiseId FK
+    +poidsKg Decimal
+    +volumeM3 Decimal
+  }
+  class Marchandise {
+    +id UUID
+    +code String
+    +libelle String
+  }
+  class Utilisateur {
+    +id UUID
+    +login String
+    +roles List
+  }
+  class DossierTransport {
+    +id UUID
+    +commandeId FK
+    +statut StatutDossier
+  }
+  class Segment {
+    +dossierId FK
+    +siteId FK
+    +type TypeSegment
+    +fenetreDebut Instant
+    +fenetreFin Instant
+  }
+  class Site {
+    +id UUID
+    +code String
+    +latitude Double
+    +longitude Double
+  }
+  class Voyage {
+    +id UUID
+    +dossierIds FK
+    +vehiculeId FK
+    +remorqueId FK
+    +statut StatutVoyage
+  }
+  class Vehicule {
+    +id UUID
+    +immatriculation String
+    +statut StatutVehicule
+  }
+  class Remorque {
+    +id UUID
+    +immatriculation String
+  }
+  class Chauffeur {
+    +id UUID
+    +matricule String
+    +disponibilite String
+  }
+  class Affectation {
+    +voyageId FK
+    +chauffeurId FK
+    +role RoleChauffeur
+    +date LocalDate
+  }
+  class EvenementVoyage {
+    +id UUID
+    +voyageId FK
+    +type String
+    +horodatage Instant
+  }
+  class PriseCarburant {
+    +id UUID
+    +voyageId FK
+    +litres Decimal
+    +statut StatutPrise
+  }
+
+  Client "1" --> "*" Commande : passe
+  Utilisateur ..> Commande : cree
+  Marchandise "1" --> "*" LigneCommande : reference
+  Commande "1" *-- "*" LigneCommande : contient
+  Commande "1" --> "0..1" DossierTransport : genere
+  Site "1" --> "*" Segment : accueille
+  DossierTransport "1" *-- "*" Segment : itineraire
+  DossierTransport "*" --> "*" Voyage : groupe
+  Vehicule "1" --> "*" Voyage : affecte
+  Remorque "0..1" --> "*" Voyage : attache
+  Chauffeur "1" --> "*" Affectation : conduit
+  Voyage "1" *-- "*" Affectation : porte
+  Voyage "1" --> "*" EvenementVoyage : tracking
+  Voyage "1" --> "*" PriseCarburant : plein

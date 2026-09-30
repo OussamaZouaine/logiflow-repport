@@ -1,0 +1,12 @@
+flowchart LR
+  Client[Client] --> Commande[Commande]
+  Commande --> Dossier[Dossier_de_transport]
+  Dossier --> Voyage[Voyage]
+  Voyage --> Tracking[Tracking]
+  Voyage --> Carburant[Prise_carburant]
+  Vehicule[Vehicule] --> Voyage
+  Remorque[Remorque] --> Voyage
+  Chauffeur[Chauffeur] --> Voyage
+  Voyage --> Maintenance[Maintenance]
+  Site[Site] --> Dossier
+  Marchandise[Marchandise] --> Commande

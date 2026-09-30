@@ -1,0 +1,8 @@
+flowchart TD
+  START[Besoin_identite_TMS]
+  START --> Q2{Emmettre_les_jetons_dans_Spring?}
+  Q2 -->|Oui_maison| BAD[Anti_pattern_TMS_gere_mots_de_passe]
+  Q2 -->|Non_deleguer_IdP| Q3{IdP_cloud_SaaS_ou_autoheberge?}
+  Q3 -->|SaaS_Auth0_Cognito| CLOUD[Dependance_externe_cout_vendor]
+  Q3 -->|Autoheberge_OSS| KC[Keycloak_retenu]
+  KC --> RES[Local_dev_et_prod_OIDC_plus_JWT]

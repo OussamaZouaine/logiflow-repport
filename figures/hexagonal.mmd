@@ -1,0 +1,19 @@
+flowchart TB
+  subgraph adapters [Adapters]
+    REST[REST_Controllers]
+    JPA[JPA_Repositories]
+    MSG[Event_Listeners]
+  end
+  subgraph app [Application]
+    UC[Use_Cases_Services]
+  end
+  subgraph dom [Domain]
+    AGG[Aggregates_VOs]
+    PORT[Ports_Interfaces]
+  end
+  REST --> UC
+  MSG --> UC
+  UC --> PORT
+  UC --> AGG
+  JPA --> PORT
+  PORT -.-> AGG

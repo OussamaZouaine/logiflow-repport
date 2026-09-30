@@ -1,0 +1,135 @@
+\chapter{Sécurité}
+\label{chap:securite}
+
+\section{Authentification et autorisation}
+
+LogiFlow sépare clairement \textbf{émission} et \textbf{consommation} des jetons.
+Keycloak est le fournisseur d'identité (IdP) OIDC ; Spring Boot est un
+\emph{resource server} qui \textbf{valide} les JWT sans jamais stocker de mots de passe
+ni émettre de jetons lui-même \cite{keycloak}.
+
+\figmmd{seq-auth}{Séquence d'authentification : Angular $\leftrightarrow$ Keycloak $\leftrightarrow$ Spring Boot.}
+
+\begin{itemize}[leftmargin=*]
+  \item Angular : client OAuth2 / OIDC (Authorization Code + \textbf{PKCE}) via
+        \texttt{angular-auth-oidc-client}.
+  \item Spring : validation JWT (signature JWKS, issuer public, audience, rôles) ;
+        clés lues via le réseau Docker interne vers Keycloak.
+  \item MFA : entièrement gérée par l'IdP ; Spring peut exiger les claims \texttt{amr} / \texttt{acr}.
+  \item RBAC applicatif : six rôles métier portés dans le JWT et contrôlés aussi côté UI.
+  \item Deny-by-default sur l'API : seuls health / info / OpenAPI (désactivable) restent publics.
+\end{itemize}
+
+\figmmd{auth-responsabilites}{Répartition des responsabilités : Keycloak émet, Angular transporte, Spring autorise, Flask reste hors JWT utilisateur.}
+
+\section{Pourquoi Keycloak (et pas « seulement du JWT »)}
+
+\subsection{JWT seul ne suffit pas}
+
+Un JWT n'est qu'un \textbf{format} de jeton signé. Il ne répond pas, à lui seul, aux questions
+opérationnelles de l'identité :
+
+\begin{itemize}[leftmargin=*]
+  \item Qui crée les comptes, réinitialise les mots de passe, gère les sessions et la révocation ?
+  \item Où vit le MFA (OTP, WebAuthn) et qui refuse d'émettre un jeton tant que le second facteur n'est pas validé ?
+  \item Comment le frontend obtient-il le jeton sans embarquer un secret client (d'où PKCE) ?
+\end{itemize}
+
+Si Spring \emph{émettait} lui-même des JWT après un login login/mot de passe maison, le TMS
+deviendrait un mini-IdP : stockage de credentials, politiques de mot de passe, récupération de
+compte, MFA, audit --- hors du cœur métier transport. C'est l'anti-pattern écarté.
+
+\subsection{Ce que Keycloak apporte}
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Standards} --- OIDC / OAuth2 prêts à l'emploi (Authorization Code + PKCE pour SPA).
+  \item \textbf{IdP spécialisé} --- realm \texttt{logiflow}, clients, rôles, thèmes, import de
+        configuration versionnée (image Docker dédiée).
+  \item \textbf{MFA déléguée} --- aucun OTP en base TMS ; le backend peut seulement \emph{exiger}
+        la preuve dans le jeton.
+  \item \textbf{SSO possible} --- un même IdP peut servir d'autres applications plus tard.
+  \item \textbf{Auto-hébergé et open source} --- adapté à un projet tutoré / démo cloud maîtrisée
+        (même EC2, derrière Caddy sur \texttt{auth.<domaine>}), sans dépendance exclusive à un SaaS.
+\end{enumerate}
+
+\subsection{Alternatives examinées}
+
+\begin{table}[H]
+\centering
+\caption{Alternatives d'identité et motif de non-retenue (ou usage limité).}
+\label{tab:auth-alt}
+\small
+\begin{tabularx}{\linewidth}{@{}l X@{}}
+\toprule
+Option & Analyse \\
+\midrule
+Login + JWT maison (Spring) &
+  Couplage fort ; Spring devient IdP ; MFA et reset à réécrire ; écarté. \\
+Session serveur (cookie) &
+  Moins adapté à une API stateless multi-clients ; scaling et SPA moins naturels. \\
+Auth0 / Cognito / Firebase Auth &
+  IdP matures en SaaS, mais coût, vendor lock-in et dépendance réseau externe ;
+  moins de contrôle du realm pour une démo scolaire auto-hébergée. \\
+Keycloak &
+  \textbf{Retenu et utilisé} (local \texttt{dev} et production) :
+  OIDC, MFA, auto-hébergeable, SPA + resource server Spring. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\figmmdhere{auth-choix}{Arbre de décision simplifié ayant conduit à Keycloak.}
+
+\subsection{Conséquences pour LogiFlow}
+
+\begin{itemize}[leftmargin=*]
+  \item Le module \texttt{iam} du backend gère le \emph{profil applicatif} (rôles métier TMS),
+        pas les secrets de connexion.
+  \item Flask ne voit jamais le JWT utilisateur : après authentification Spring, seuls des
+        en-têtes de service et un contexte copilote borné traversent la frontière IA.
+  \item En cloud, l'\texttt{iss} du jeton est l'URL \textbf{publique} Keycloak ; la validation
+        JWKS peut passer par le hostname Docker interne --- aucun aller-retour inutile par Internet
+        pour les clés.
+\end{itemize}
+
+\section{Sécurité réseau et cloud}
+
+\begin{itemize}[leftmargin=*]
+  \item Surface d'attaque réduite : SG ouvert uniquement sur \textbf{80/443} ; reverse proxy Caddy ;
+        backend, IA, Keycloak et Postgres \textbf{non exposés} hors réseau Docker.
+  \item Pas de SSH ; administration via AWS SSM Session Manager / Run Command \cite{awsssm}.
+  \item Secrets dans \textbf{SSM Parameter Store}, jamais dans Git ; instance profile en moindre privilège.
+  \item EBS chiffré, IMDSv2, durcissement OS (rôle Ansible \texttt{securite} : CrowdSec, auditd\ldots).
+  \item CI : tflint, scans (Gitleaks, Trivy, CodeQL) ; \texttt{terraform apply} et déploiement manuels
+        (environnement GitHub \texttt{production}).
+\end{itemize}
+
+\section{Frontière Spring $\leftrightarrow$ Flask}
+
+Flask ne reçoit pas le JWT utilisateur. L'appel entrant exige \texttt{X-Internal-Api-Key}.
+Les rappels d'outils du copilote utilisent une clé de callback distincte et un contexte
+\texttt{X-Copilote-Contexte}. Évolution possible vers mTLS ou OAuth2 client-credentials.
+
+\section{Mesures côté code}
+
+\begin{itemize}[leftmargin=*]
+  \item Frontières Modulith + ArchUnit.
+  \item Domaine sans dépendance framework.
+  \item Erreurs HTTP normalisées (RFC~7807).
+  \item Validation d'arguments sur les endpoints publics.
+\end{itemize}
+
+\section{Limites et axes d'amélioration}
+
+L'architecture décrite est mise en œuvre dans les dépôts. Les axes suivants restent ouverts
+pour une industrialisation ultérieure :
+
+\begin{enumerate}[leftmargin=*]
+  \item Renforcer Spring $\leftrightarrow$ Flask (mTLS ou OAuth2 client-credentials) au-delà des clés API.
+  \item Approfondir les agents (géométrie de groupage, maintenance prédictive avancée).
+  \item Étendre le monitoring et les alertes au-delà des healthchecks et budgets AWS.
+  \item Maîtriser le coût LLM (quotas fournisseur) et le calendrier d'arrêt de l'EC2.
+  \item Généraliser la MFA Keycloak sur l'ensemble des comptes cloud.
+\end{enumerate}
+
+Ces évolutions s'appuient sur les frontières déjà en place : BFF, modules Modulith, security groups,
+SSM, Caddy et séparation des bases.

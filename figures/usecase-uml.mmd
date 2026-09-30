@@ -1,0 +1,47 @@
+flowchart TB
+  subgraph actors [Acteurs]
+    direction TB
+    ADM((ADMINISTRATEUR))
+    RESP((RESPONSABLE))
+    EXP((EXPLOITANT))
+    COM((COMMERCIAL))
+    ATE((ATELIER))
+    CHA((CHAUFFEUR))
+  end
+
+  subgraph system [LogiFlow_TMS]
+    direction TB
+    UC1[Provisionner_utilisateurs]
+    UC2[Gerer_referentiels]
+    UC3[Creer_confirmer_commande]
+    UC4[Ouvrir_dossier_transport]
+    UC5[Planifier_voyage]
+    UC6[Suivre_execution]
+    UC7[Saisir_valider_carburant]
+    UC8[Gerer_maintenance]
+    UC9[Consulter_copilote_IA]
+    UC10[Calculer_itineraire_IA]
+  end
+
+  ADM --> UC1
+  ADM --> UC2
+  ADM --> UC9
+  COM --> UC2
+  COM --> UC3
+  EXP --> UC4
+  EXP --> UC5
+  EXP --> UC6
+  EXP --> UC9
+  EXP --> UC10
+  RESP --> UC5
+  RESP --> UC6
+  RESP --> UC7
+  RESP --> UC8
+  RESP --> UC9
+  ATE --> UC8
+  CHA --> UC6
+  CHA --> UC7
+  UC3 --> UC4
+  UC4 --> UC5
+  UC5 --> UC6
+  UC5 --> UC10

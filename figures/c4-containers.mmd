@@ -1,0 +1,22 @@
+flowchart LR
+  User[Utilisateur_metier]
+  NG[Angular_SPA]
+  KC[Keycloak]
+  SB[Spring_Boot_API]
+  PG[(PostgreSQL_TMS)]
+  FL[Flask_AI]
+  LLM[LLM_cloud]
+  OSRM[OSRM]
+  PGA[(PostgreSQL_AI)]
+
+  User -->|HTTPS| NG
+  NG -->|OIDC_PKCE| KC
+  NG -->|JWT_/api/v1| SB
+  SB -->|valide_JWT| KC
+  SB --> PG
+  SB -->|cle_interne| FL
+  FL -->|outils_callback| SB
+  FL --> LLM
+  FL --> OSRM
+  FL --> PGA
+  SB --> OSRM

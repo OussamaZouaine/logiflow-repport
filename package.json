@@ -1,0 +1,14 @@
+{
+  "name": "logiflow-repport",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Rapport scolaire LogiFlow (LaTeX) — ENSI Tanger",
+  "scripts": {
+    "figures": "bash scripts/render-mermaid.sh",
+    "compile": "bash compile.sh",
+    "screenshots": "node scripts/capture-screens.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.55.0"
+  }
+}

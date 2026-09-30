@@ -1,0 +1,29 @@
+gantt
+  title Planning individuel — ZOUAINE Oussama (Frontend · Infra / DevOps)
+  dateFormat YYYY-MM-DD
+  axisFormat %d/%m
+  tickInterval 2week
+  excludes weekends
+
+  section Conception UI
+  Maquettes parcours et App Shell     :u0, 2026-02-10, 12d
+  Revue conception                    :milestone, m1, 2026-02-27, 0d
+
+  section Frontend
+  App Shell RBAC navigation           :f1, 2026-02-23, 12d
+  Écrans listes et fiches métier      :f2, after f1, 18d
+  Tableau de bord et File du jour     :f3, 2026-03-20, 10d
+  Copilote UI et nouveau voyage       :f4, 2026-03-30, 10d
+  Intégration API et polish UX        :f5, 2026-03-27, 14d
+
+  section Infrastructure / DevOps
+  Docker Compose local                :i0, 2026-03-02, 8d
+  Terraform VPC et instances          :i1, 2026-03-16, 12d
+  Ansible déploiement GHCR            :i2, after i1, 10d
+  Pipeline CI/CD                      :i3, 2026-03-23, 14d
+
+  section Livraison
+  Démo intermédiaire                  :milestone, m2, 2026-03-27, 0d
+  Captures et contributions rapport   :r1, 2026-04-01, 21d
+  Démo finale                         :milestone, m3, 2026-04-22, 0d
+  Dépôt rapport                       :milestone, m4, 2026-04-25, 0d

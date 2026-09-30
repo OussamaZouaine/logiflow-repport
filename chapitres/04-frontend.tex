@@ -1,0 +1,77 @@
+\chapter{Frontend}
+\label{chap:frontend}
+
+\section{Stack et organisation}
+
+Le frontend (\repo{logiflow-frontend}) est une SPA \textbf{Angular 22} : composants standalone, signals, zoneless, formulaires signal, \texttt{httpResource}. L'UI s'appuie sur \textbf{Tailwind CSS 4} et \textbf{Zard UI}. Cartes Leaflet et graphiques ECharts complètent le tableau de bord.
+
+Les fonctionnalités sont organisées par dossiers métier (\texttt{commandes/}, \texttt{voyages/}, \texttt{maintenance/}, \ldots) avec routes lazy sous un \textbf{SignedInShell}.
+
+\section{App Shell et navigation}
+
+L'\textbf{App Shell} fixe la chrome : sidebar de navigation primaire, zone de contenu scrollable, barre utilitaire (fil d'Ariane, déclencheur Copilote IA, badge File du jour). L'identité et la déconnexion vivent dans le \textbf{pied de sidebar}, pas dans un menu avatar.
+
+La navigation est dérivée d'une table de destinations filtrée par rôles (\texttt{destinationsForRoles}). Un utilisateur ne voit que les modules qu'il a le droit d'ouvrir.
+
+\section{Contrôle d'accès (RBAC)}
+
+Chaque route porte \texttt{data.roles}. Le garde \texttt{roleGuard} redirige vers
+\texttt{/403} (Accès refusé) si le rôle de session ne correspond pas. Un utilisateur
+authentifié mais non autorisé voit le 403 ; un utilisateur sans session est renvoyé
+vers la connexion.
+
+Le tableau~\ref{tab:rbac-ui} résume, pour quelques zones de l'UI, quels rôles métier
+y ont typiquement accès (claims portés par le JWT Keycloak).
+
+\begin{table}[H]
+\centering
+\caption{Zones de l'interface et rôles métier associés (exemples).}
+\label{tab:rbac-ui}
+\small
+\begin{tabularx}{\linewidth}{@{}>{\bfseries\raggedright\arraybackslash}p{3.4cm} >{\raggedright\arraybackslash}X@{}}
+\toprule
+Zone UI & Rôles autorisés (libellé et claim JWT) \\
+\midrule
+Commandes / clients &
+  Commercial (\texttt{COMMERCIAL}) ;\quad
+  Administrateur (\texttt{ADMINISTRATEUR}) \\[0.65em]
+Dossiers / voyages &
+  Exploitant (\texttt{EXPLOITANT}) ;\quad
+  Responsable d'exploitation (\texttt{RESPONSABLE\_EXPLOITATION}) \\[0.65em]
+Maintenance &
+  Atelier (\texttt{ATELIER}) ;\quad
+  Responsable d'exploitation (\texttt{RESPONSABLE\_EXPLOITATION}) \\[0.65em]
+Carburant (saisie) &
+  Chauffeur (\texttt{CHAUFFEUR}) ;\quad
+  plus validateurs côté exploitation \\[0.65em]
+Utilisateurs &
+  Administrateur (\texttt{ADMINISTRATEUR}) \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Authentification}
+
+Le chemin nominal --- en local comme en cloud --- est \textbf{Keycloak} via
+\texttt{angular-auth-oidc-client} (Authorization Code + \textbf{PKCE}). Le frontend est un
+client public OIDC : après connexion IdP, il joint l'access token sur chaque appel
+\texttt{/api/}. Spring agit uniquement comme \emph{resource server} (validation JWT, rôles) ;
+il n'émet pas de jetons et ne stocke pas les mots de passe
+(voir chapitre~\ref{chap:securite}).
+
+En développement comme en production, le frontend s'authentifie auprès de Keycloak
+(OIDC) et le backend (profil \texttt{dev} ou \texttt{prod}) exige un JWT valide sur
+l'API métier.
+
+\section{Écrans clés}
+
+Les principaux écrans sont illustrés au chapitre~\ref{chap:captures} :
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Tableau de bord} : Aperçu (compteurs / breakdowns de statut) puis File du jour.
+  \item \textbf{Listes métier} : recherche, filtres, empty states avec CTA unique.
+  \item \textbf{Fiches} : détail véhicule, voyage, dossier, avec documents et scores.
+  \item \textbf{Nouveau voyage} : sélection de dossiers, calcul d'itinéraire IA, affectations.
+  \item \textbf{Copilote} : panneau latéral conversationnel (pas une route dédiée en v1).
+  \item \textbf{Palette de commandes} : modules, actions « Nouveau \ldots », références.
+\end{itemize}

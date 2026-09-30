@@ -1,0 +1,19 @@
+sequenceDiagram
+  participant Dev as Equipe
+  participant GH as GitHub_Actions
+  participant TF as Terraform_OIDC
+  participant AWS as AWS
+  participant GHCR as GHCR
+  participant SSM as SSM_Run_Command
+  participant EC2 as EC2_Docker
+
+  Dev->>TF: bootstrap_etat_S3_OIDC
+  Dev->>TF: terraform_apply_prod
+  TF->>AWS: VPC_EC2_EIP_SG_SSM_Route53
+  Dev->>GH: push_images_apps
+  GH->>GHCR: build_push_tags
+  Dev->>GH: workflow_deployer
+  GH->>SSM: SendCommand_OIDC
+  SSM->>EC2: deployer_sh
+  EC2->>GHCR: docker_compose_pull
+  EC2->>EC2: healthcheck_up

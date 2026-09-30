@@ -1,0 +1,28 @@
+flowchart TD
+  order --> referential
+  dossier --> order
+  dossier --> referential
+  fleet --> document
+  driver --> document
+  maintenance --> fleet
+  planning --> dossier
+  planning --> driver
+  planning --> fleet
+  planning --> maintenance
+  planning --> referential
+  carburant --> planning
+  carburant --> document
+  tracking --> planning
+  ai --> referential
+  ai --> order
+  ai --> dossier
+  ai --> fleet
+  ai --> driver
+  ai --> planning
+  ai --> maintenance
+  ai --> tracking
+  ai --> carburant
+  ai --> document
+  iam
+  shared
+  config

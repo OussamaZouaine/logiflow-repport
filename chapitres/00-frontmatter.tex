@@ -1,0 +1,129 @@
+% Front matter — équipe LogiFlow
+
+\chapter*{Dédicaces}
+\addcontentsline{toc}{chapter}{Dédicaces}
+
+Nous dédions ce travail à nos parents, dont le soutien, les sacrifices et la confiance ont rendu possible notre parcours à l'ENSI Tanger. Leur présence, dans les moments de doute comme dans les moments de réussite, a été le fondement de notre progression.
+
+À nos familles et à nos proches, pour leur patience, leurs encouragements et leur bienveillance tout au long de cette formation.
+
+À nos amis, compagnons de route, pour les échanges, l'entraide et la légèreté qu'ils ont su apporter durant les périodes les plus exigeantes du projet.
+
+Enfin, nous dédions ce rapport à toute l'équipe LogiFlow : ce document est le fruit d'un travail collectif, de décisions partagées et d'un engagement commun pour concevoir un système utile, structuré et professionnel.
+
+\vspace{1.2em}
+\begin{flushright}
+\textit{L'équipe LogiFlow}
+\end{flushright}
+
+\clearpage
+\chapter*{Remerciements}
+\addcontentsline{toc}{chapter}{Remerciements}
+
+Nous tenons à remercier Allah, Le Tout-Puissant, de nous avoir accordé la force et la persévérance nécessaires pour mener à bien ce projet tutoré.
+
+Nous exprimons notre profonde gratitude à notre encadrant, \textbf{Jaber EL BOUHDIDI}, pour son suivi, ses conseils et sa disponibilité tout au long du projet.
+
+Nos remerciements vont à M.~\textbf{CHAKER Jihad}, responsable de la filière Génie informatique, ainsi qu'à l'ensemble des enseignants de l'École des Nouvelles Sciences et Ingénierie de Tanger pour la qualité de la formation reçue.
+
+Enfin, nous remercions les membres du jury d'avoir accepté d'évaluer ce travail et de nous consacrer leur temps et leur expertise.
+
+\clearpage
+\chapter*{Résumé}
+\addcontentsline{toc}{chapter}{Résumé}
+
+Ce rapport présente le projet tutoré \textbf{LogiFlow}, un \emph{Transport Management System} (TMS) pour le transport routier de marchandises, réalisé en équipe de quatre étudiants ingénieurs à l'ENSI Tanger (filière Génie informatique, année 2025--2026).
+
+L'objectif est de concevoir et de développer une plateforme web unique, filtrée par rôle métier (exploitant, responsable d'exploitation, atelier, commercial, chauffeur, administrateur), couvrant le cycle commercial $\rightarrow$ dossier de transport $\rightarrow$ voyage $\rightarrow$ suivi, carburant et maintenance.
+
+Le backend est un monolithe modulaire \textbf{Spring Boot} / \textbf{Spring Modulith}, structuré en architecture hexagonale par module métier, avec PostgreSQL. Le frontend est une SPA \textbf{Angular} (signals, Tailwind). L'intelligence artificielle (copilote conversationnel SSE, planification assistée, calcul d'itinéraire, maintenance prédictive) est isolée dans un service \textbf{Flask} (LLM cloud compatible OpenAI, OSRM, pgvector), jamais exposé au navigateur : Spring agit comme BFF. L'infrastructure cloud AWS (une EC2, Caddy, Docker Compose) est provisionnée par \textbf{Terraform} et configurée par \textbf{Ansible}, sans SSH exposé (AWS SSM).
+
+Ce travail a permis de mobiliser des compétences en conception métier, architecture logicielle, développement full-stack, intégration d'agents IA et infrastructure as code.
+
+\vspace{1em}
+\noindent\textbf{Mots-clés :} Projet tutoré, TMS, Transport, Spring Modulith, Architecture hexagonale, Angular, Keycloak, Flask, Groq, OSRM, Terraform, Ansible, AWS, Intelligence artificielle.
+
+\clearpage
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+
+This report presents the supervised team project \textbf{LogiFlow}, a road-freight \emph{Transport Management System} (TMS) developed by four engineering students at ENSI Tangier (Computer Engineering, academic year 2025--2026).
+
+The goal is a single role-filtered web application covering the commercial order $\rightarrow$ transport dossier $\rightarrow$ trip $\rightarrow$ tracking, fuel and maintenance lifecycle.
+
+The backend is a modular \textbf{Spring Boot} / \textbf{Spring Modulith} monolith with hexagonal modules and PostgreSQL. The frontend is an \textbf{Angular} SPA. AI features (SSE copilot, assisted planning, routing, predictive maintenance) run in an isolated \textbf{Flask} service with a cloud OpenAI-compatible LLM and \textbf{OSRM}; the browser never talks to Flask. AWS runs a single EC2 Docker stack behind Caddy, managed with \textbf{Terraform} and \textbf{Ansible} via SSM (no public SSH).
+
+\vspace{1em}
+\noindent\textbf{Keywords:} Supervised project, TMS, freight, Spring Modulith, hexagonal architecture, Angular, Keycloak, Flask, Groq, OSRM, Terraform, Ansible, AWS, Artificial Intelligence.
+
+\clearpage
+\chapter*{Avant-propos}
+\addcontentsline{toc}{chapter}{Avant-propos}
+
+\begin{description}[style=nextline,leftmargin=3.2cm,font=\normalfont\bfseries]
+  \item[Établissement] École des Nouvelles Sciences \& Ingénierie (ENSI), Tanger
+  \item[Filière] Génie informatique --- temps aménagé
+  \item[Cadre] Projet tutoré (travail d'équipe)
+  \item[Intitulé] LogiFlow --- Transport Management System
+  \item[Encadrant] Jaber EL BOUHDIDI
+\end{description}
+
+\vspace{1.2em}
+\noindent\textbf{Composition de l'équipe et responsabilités} :
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{@{}clp{3.2cm}p{5.8cm}@{}}
+\toprule
+\# & Nom et prénom & Rôle(s) & Responsabilités principales \\
+\midrule
+1 & STITOU Ibrahim
+  & Chef de projet ;\newline Responsable Backend
+  & Coordination de l'équipe, suivi du planning, communication avec l'encadrant ;\newline développement API Spring Boot, gestion de la base de données \\[0.7em]
+2 & ZOUAINE Oussama
+  & Responsable Frontend ;\newline Responsable Infra / DevOps
+  & Développement Angular, UI/UX, intégration API ;\newline Docker, CI/CD, déploiement AWS \\[0.7em]
+3 & RAHALI Hamza
+  & Responsable Sécurité
+  & Authentification, gestion des accès, sécurité applicative \\[0.7em]
+4 & ES-SEMLLALI Oussama
+  & Responsable IA
+  & Développement et intégration des fonctionnalités IA dans l'application \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\clearpage
+\chapter*{Liste des sigles et acronymes}
+\addcontentsline{toc}{chapter}{Liste des sigles et acronymes}
+
+\begin{table}[ht]
+\centering
+\caption{Sigles et acronymes utilisés dans ce rapport.}
+\label{tab:sigles}
+\begin{tabular}{@{}lp{10cm}@{}}
+\toprule
+Acronyme & Désignation \\
+\midrule
+ADR & Architecture Decision Record \\
+API & Application Programming Interface \\
+BFF & Backend for Frontend \\
+CI/CD & Continuous Integration / Continuous Delivery \\
+DTO & Data Transfer Object \\
+GHCR & GitHub Container Registry \\
+IAM & Identity and Access Management \\
+JWT & JSON Web Token \\
+LLM & Large Language Model \\
+MFA & Multi-Factor Authentication \\
+OIDC & OpenID Connect \\
+OSRM & Open Source Routing Machine \\
+PKCE & Proof Key for Code Exchange \\
+RBAC & Role-Based Access Control \\
+SSE & Server-Sent Events \\
+SSM & AWS Systems Manager Session Manager \\
+TMS & Transport Management System \\
+VPC & Virtual Private Cloud \\
+\bottomrule
+\end{tabular}
+\end{table}

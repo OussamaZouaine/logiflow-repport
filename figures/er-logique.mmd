@@ -1,0 +1,18 @@
+erDiagram
+  CLIENT ||--o{ COMMANDE : passe
+  COMMANDE ||--|{ LIGNE_COMMANDE : contient
+  MARCHANDISE ||--o{ LIGNE_COMMANDE : reference
+  COMMANDE ||--o| DOSSIER : genere
+  DOSSIER ||--|{ LIGNE_MARCHANDISE : porte
+  SITE ||--o{ SEGMENT : accueille
+  DOSSIER ||--|{ SEGMENT : itinerarie
+  DOSSIER }o--o{ VOYAGE : groupe
+  VEHICULE ||--o{ VOYAGE : affecte
+  REMORQUE ||--o| VOYAGE : attache
+  CHAUFFEUR }o--o{ VOYAGE : conduite
+  VOYAGE ||--o{ EVENEMENT : tracking
+  VOYAGE ||--o{ PRISE_CARBURANT : plein
+  STATION ||--o{ PRISE_CARBURANT : lieu
+  VEHICULE ||--o{ ORDRE_TRAVAIL : atelier
+  VEHICULE ||--o{ PLAN_ENTRETIEN : preventif
+  UTILISATEUR ||--o{ ROLE : porte

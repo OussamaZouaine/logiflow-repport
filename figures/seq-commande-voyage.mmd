@@ -1,0 +1,26 @@
+sequenceDiagram
+  participant COM as Commercial
+  participant NG as Angular
+  participant SB as Spring_Boot
+  participant PG as PostgreSQL
+
+  COM->>NG: Creer_commande
+  NG->>SB: POST_/api/v1/commandes
+  SB->>PG: Insert_commande_lignes
+  SB-->>NG: Commande_BROUILLON
+  COM->>NG: Confirmer
+  NG->>SB: PATCH_statut_CONFIRMEE
+  SB->>PG: Update_plus_event
+  Note over SB: Listener_ouvre_dossier
+  SB->>PG: Insert_dossier_segments
+  SB-->>NG: Dossier_ouvert
+
+  participant EXP as Exploitant
+  EXP->>NG: Nouveau_voyage
+  NG->>SB: POST_/api/v1/voyages
+  SB->>PG: Insert_voyage_affectations
+  SB-->>NG: Voyage_PLANIFIE
+  EXP->>NG: Demarrer
+  NG->>SB: PATCH_EN_COURS
+  SB->>PG: Insert_evenement
+  SB-->>NG: Tracking_actif

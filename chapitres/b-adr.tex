@@ -1,0 +1,26 @@
+\chapter{Décisions d'architecture (ADR)}
+\label{chap:adr}
+
+Cette annexe résume les décisions structurantes documentées dans le dépôt backend (\texttt{docs/adr/}).
+
+\begin{description}[style=nextline,leftmargin=1.2cm,font=\normalfont\bfseries]
+  \item[ADR-0001 --- Monolithe modulaire]
+    Un seul déploiement Spring, plusieurs modules Modulith aux frontières \texttt{api}, plutôt qu'une myriade de microservices dès le départ.
+
+  \item[ADR-0002 --- MFA Keycloak]
+    La MFA est entièrement gérée par l'IdP ; Spring valide la présence des claims attendus dans le JWT, sans stocker d'OTP en base TMS.
+
+  \item[ADR-0003 --- Station $\neq$ Site]
+    Une station carburant n'est pas un site de chargement/déchargement : schémas et écrans séparés.
+
+  \item[ADR-0004 --- Copilote + outils]
+    Le copilote vit dans Flask ; les outils métier rappellent Spring. Base IA dédiée (pgvector) pour la mémoire agent.
+
+  \item[ADR-0005 --- Agent planification]
+    Flask propose ; Spring reste juge de la conformité et de la persistance du voyage.
+
+  \item[ADR-0006 --- Module maintenance]
+    Plans, OT, sinistres, scores et prestataires regroupés ; la flotte reste propriétaire du statut engin.
+\end{description}
+
+\noindent\textit{Références détaillées :} fichiers Markdown du dépôt \repo{logiflow-backend}/docs/adr/.

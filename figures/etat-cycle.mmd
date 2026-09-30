@@ -1,0 +1,27 @@
+flowchart LR
+  subgraph commercial [Commercial]
+    Brouillon[Brouillon]
+    Confirmee[Confirmee]
+    Annulee[Annulee]
+  end
+  subgraph transport [Transport]
+    DossierOuvert[DossierOuvert]
+    VoyagePlanifie[VoyagePlanifie]
+  end
+  subgraph execution [Execution]
+    EnCours[EnCours]
+    Incident[Incident]
+    Livre[Livre]
+  end
+
+  Start(( )) --> Brouillon
+  Brouillon -->|confirmer| Confirmee
+  Brouillon -->|annuler| Annulee
+  Confirmee -->|generation_dossier| DossierOuvert
+  DossierOuvert -->|affectation| VoyagePlanifie
+  VoyagePlanifie -->|depart| EnCours
+  EnCours -->|arrivee| Livre
+  EnCours -->|blocage| Incident
+  Incident -->|reprise| EnCours
+  Livre --> End(( ))
+  Annulee --> End

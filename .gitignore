@@ -1,0 +1,38 @@
+# LaTeX build artifacts
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.run.xml
+*.synctex.gz
+*.toc
+*.lof
+*.lot
+*.nav
+*.snm
+*.vrb
+*.bbl-SAVE-ERROR
+_minted*
+
+# PDF is built locally; release via GitHub Releases if needed
+main.pdf
+
+# Node (Mermaid CLI + Playwright screenshots)
+node_modules/
+npm-debug.log*
+.yarn/
+.pnpm-debug.log*
+
+# Local env (screenshot script credentials)
+.env
+.env.local
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.swp
+*~

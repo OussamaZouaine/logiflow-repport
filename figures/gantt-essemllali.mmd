@@ -1,0 +1,31 @@
+gantt
+  title Planning individuel — ES-SEMLLALI Oussama (Intelligence artificielle)
+  dateFormat YYYY-MM-DD
+  axisFormat %d/%m
+  tickInterval 2week
+  excludes weekends
+
+  section Conception IA
+  Périmètre agents et contrats API    :a0, 2026-02-16, 10d
+  Revue conception                    :milestone, m1, 2026-02-27, 0d
+
+  section Service Flask
+  Socle Flask santé config LLM        :a1, 2026-03-09, 10d
+  Base logiflow_ai pgvector Alembic   :a2, 2026-03-16, 8d
+  Auth interne clés Spring Flask      :a3, 2026-03-16, 7d
+
+  section Agents
+  Copilote SSE outils métier          :a4, 2026-03-23, 12d
+  Planification assistée              :a5, 2026-03-30, 10d
+  Itinéraire OSRM                     :a6, 2026-03-30, 8d
+  Maintenance prédictive              :a7, 2026-04-06, 10d
+
+  section Intégration
+  Branchement façade Spring BFF       :a8, 2026-03-27, 12d
+  Tests agents et gabarits fallback   :a9, 2026-04-08, 10d
+
+  section Livraison
+  Démo intermédiaire                  :milestone, m2, 2026-03-27, 0d
+  Chapitre IA rapport                 :r1, 2026-04-01, 21d
+  Démo finale                         :milestone, m3, 2026-04-22, 0d
+  Dépôt rapport                       :milestone, m4, 2026-04-25, 0d

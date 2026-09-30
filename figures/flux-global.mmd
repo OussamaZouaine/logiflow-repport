@@ -1,0 +1,11 @@
+flowchart LR
+  NG[Angular] -->|HTTPS_JWT| SB[Spring_Boot]
+  SB -->|X-Internal-Api-Key_:8000| FL[Flask]
+  FL -->|callback_outils| SB
+  SB --> PG[(PostgreSQL_TMS)]
+  FL --> PGA[(PostgreSQL_AI)]
+  FL --> LLM[LLM_cloud]
+  SB --> OSRM[OSRM]
+  FL --> OSRM
+  NG -.->|OIDC| KC[Keycloak]
+  SB -.->|JWT| KC

@@ -1,0 +1,22 @@
+sequenceDiagram
+  participant U as Utilisateur
+  participant NG as Angular
+  participant SB as Spring_Boot
+  participant FL as Flask
+  participant LLM as LLM_cloud
+
+  U->>NG: Message_copilote
+  NG->>SB: POST_ia_copilote_messages
+  SB->>SB: JWT_plus_jeton_contexte
+  SB->>FL: POST_copilot_messages_SSE
+  FL->>SB: GET_outils_catalogue
+  SB-->>FL: Liste_outils
+  loop Boucle_outils
+    FL->>LLM: Prompt_plus_outils
+    LLM-->>FL: Appel_outil_ou_texte
+    FL->>SB: POST_outil_metier
+    SB-->>FL: Resultats_sources
+  end
+  FL-->>SB: SSE_tokens_fin
+  SB-->>NG: Proxy_SSE
+  NG-->>U: Affiche_reponse

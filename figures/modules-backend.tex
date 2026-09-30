@@ -1,0 +1,29 @@
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[
+  font=\scriptsize,
+  m/.style={draw, rounded corners=2pt, align=center, inner sep=4pt, minimum width=1.85cm, fill=blue!6},
+  arr/.style={-{Latex}, thick}
+]
+\node[m, fill=gray!20, minimum width=10.5cm] (shared) {shared (OPEN) --- VOs, exceptions, sécurité};
+\node[m, below=0.55cm of shared.west, anchor=west, xshift=0.2cm] (iam) {iam};
+\node[m, right=0.25cm of iam] (ref) {referential};
+\node[m, right=0.25cm of ref] (fleet) {fleet};
+\node[m, right=0.25cm of fleet] (drv) {driver};
+\node[m, below=0.45cm of iam] (ord) {order};
+\node[m, right=0.25cm of ord] (dos) {dossier};
+\node[m, right=0.25cm of dos] (pln) {planning};
+\node[m, right=0.25cm of pln] (mnt) {maintenance};
+\node[m, below=0.45cm of dos] (trk) {tracking};
+
+\draw[arr] (ord) -- (ref);
+\draw[arr] (dos) -- (ord);
+\draw[arr] (dos) -- (ref);
+\draw[arr] (pln) -- (dos);
+\draw[arr] (pln) -- (fleet);
+\draw[arr] (mnt) -- (fleet);
+\draw[arr] (trk) -- (pln);
+\end{tikzpicture}
+\caption{Dépendances \texttt{api} entre modules Spring Modulith (schéma simplifié). Tous dépendent de \texttt{shared}.}
+\label{fig:modules}
+\end{figure}

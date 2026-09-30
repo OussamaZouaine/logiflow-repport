@@ -1,0 +1,24 @@
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[
+  font=\small,
+  host/.style={draw, rounded corners=2pt, align=center, inner sep=6pt, minimum width=3.1cm},
+  arr/.style={-{Latex}, thick}
+]
+\node[host, fill=green!12] (fe) {EC2 frontend\\t3.micro\\sous-réseau public};
+\node[host, fill=orange!12, right=1.1cm of fe] (be) {EC2 backend\\t3.medium\\privé --- :8080};
+\node[host, fill=purple!12, right=1.1cm of be] (ai) {EC2 ai GPU\\g4dn.xlarge\\privé --- :8000};
+\node[host, fill=gray!15, below=1.0cm of be] (nat) {NAT Gateway};
+\node[host, fill=yellow!20, below=1.0cm of fe] (sm) {Secrets Manager};
+
+\draw[arr] (fe) -- (be);
+\draw[arr] (be) -- (ai);
+\draw[arr] (be) -- (sm);
+\draw[arr] (be) -- (nat);
+\draw[arr] (ai) -- (nat);
+
+\node[above=0.35cm of fe, font=\scriptsize] {Internet $\rightarrow$ :80/:443};
+\end{tikzpicture}
+\caption{Topologie AWS : seul le frontend est public ; backend et IA sortent via NAT.}
+\label{fig:infra}
+\end{figure}

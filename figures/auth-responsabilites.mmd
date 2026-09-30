@@ -1,0 +1,27 @@
+flowchart TB
+  subgraph IdP [Keycloak_IdP]
+    LOGIN[Login_mot_de_passe]
+    MFA[MFA_OTP_WebAuthn]
+    TOKENS[Emission_JWT_OIDC]
+    USERS[Comptes_realm_logiflow]
+  end
+  subgraph Front [Angular]
+    OIDC[Client_OIDC_PKCE]
+    STORE[Access_token_memoire]
+  end
+  subgraph API [Spring_Boot]
+    RS[Resource_server]
+    JWKS[Validation_JWKS]
+    RBAC[Roles_metier]
+  end
+  subgraph AI [Flask]
+    KEY[Cle_API_interne_uniquement]
+  end
+
+  OIDC -->|redirect| LOGIN
+  LOGIN --> MFA --> TOKENS
+  TOKENS -->|JWT| STORE
+  STORE -->|Bearer| RS
+  RS --> JWKS
+  JWKS --> RBAC
+  RS -->|apres_auth| KEY

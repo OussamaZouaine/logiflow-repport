@@ -1,0 +1,13 @@
+# Normalize text files on checkout (Windows ↔ Unix)
+* text=auto
+
+# LaTeX sources
+*.tex text diff=tex
+*.bib text
+*.md text
+*.sh text eol=lf
+*.mjs text eol=lf
+
+# Binary assets
+*.png binary
+*.pdf binary

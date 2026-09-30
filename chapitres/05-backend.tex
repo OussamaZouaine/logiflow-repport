@@ -1,0 +1,54 @@
+\chapter{Backend}
+\label{chap:backend}
+
+\section{Monolithe modulaire}
+
+Le backend (\repo{logiflow-backend}) est un monolithe \textbf{Spring Modulith} : un seul processus déployable, plusieurs modules métier aux frontières vérifiées en CI (ArchUnit + tests Modulith). Les modules ne se parlent que via leur package \texttt{api} ; \texttt{shared} est le seul module ouvert.
+
+\figmmd{modules-backend}{Graphe de dépendances entre modules Spring Modulith (flèches vers \texttt{shared} omises).}
+
+\begin{table}[ht]
+\centering
+\caption{Modules métier et responsabilité.}
+\label{tab:modules}
+\begin{tabular}{@{}lp{8.2cm}@{}}
+\toprule
+Module & Responsabilité \\
+\midrule
+\texttt{shared} & VOs, erreurs RFC~7807, audit, helpers sécurité \\
+\texttt{iam} & Utilisateurs et rôles applicatifs \\
+\texttt{referential} & Sites, clients, marchandises \\
+\texttt{fleet} & Véhicules et remorques \\
+\texttt{driver} & Chauffeurs, conformité, disponibilités \\
+\texttt{order} & Commandes et lignes \\
+\texttt{dossier} & Dossiers de transport, segments \\
+\texttt{planning} & Voyages, trajets, affectations, conformité \\
+\texttt{tracking} & Événements d'exécution \\
+\texttt{maintenance} & OT, plans, sinistres, scores de santé \\
+\texttt{carburant} & Prises, stations \\
+\texttt{document} & Pièces jointes polymorphes \\
+\texttt{ai} & Façade BFF vers Flask, journal des interactions \\
+\texttt{config} & Security, CORS, async, scheduling \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Architecture hexagonale par module}
+
+Chaque module suit le même découpage : \texttt{domain} (agrégats, règles), \texttt{application} (cas d'usage), \texttt{infrastructure} (JPA, REST, adapters), \texttt{api} (contrat sortant vers les autres modules).
+
+\figmmd{hexagonal}{Architecture hexagonale typique d'un module LogiFlow.}
+
+\section{Modèle de données logique}
+
+Les schémas SQL sont séparés par module (\texttt{commande}, \texttt{dossier}, \texttt{planning}, \ldots). Les liens inter-modules sont des UUID / JSON, pas des \texttt{@ManyToOne} JPA transverses.
+
+\figmmd{er-logique}{Schéma entité-relation logique du cœur TMS et des satellites flotte / carburant / maintenance.}
+
+\section{API et erreurs}
+
+L'API publique est versionnée sous \texttt{/api/v1/**}. Les problèmes métier et techniques sont renvoyés au format \textbf{RFC~7807} (\texttt{application/problem+json}) \cite{rfc7807}. Les migrations de schéma passent par \textbf{Flyway}.
+
+\section{Événements inter-modules}
+
+Les publications utilisent \texttt{ApplicationEventPublisher} et \texttt{@ApplicationModuleListener} (asynchrone, après commit). Exemples : confirmation de commande $\rightarrow$ ouverture de dossier ; immobilisation atelier $\rightarrow$ indisponibilité flotte pour le planning.

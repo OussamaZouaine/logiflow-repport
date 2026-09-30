@@ -1,0 +1,138 @@
+\documentclass[12pt,a4paper]{report}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[french]{babel}
+\usepackage{csquotes}
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{tocloft}
+\usepackage{float}
+\usepackage{hyperref}
+\usepackage[nameinlink,noabbrev,french]{cleveref}
+\usepackage[backend=biber,style=ieee,maxnames=6,sorting=none]{biblatex}
+\addbibresource{biblio.bib}
+
+\definecolor{ensiNavy}{HTML}{0B3D5C}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=ensiNavy,
+  citecolor=ensiNavy,
+  urlcolor=ensiNavy,
+  pdftitle={LogiFlow TMS --- Rapport de projet tutoré},
+  pdfauthor={ZOUAINE Oussama, STITOU Ibrahim, ES-SEMLLALI Oussama, RAHALI Hamza --- ENSI Tanger}
+}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false
+}
+
+\newcommand{\repo}[1]{\texttt{#1}}
+\newcommand{\blank}[1]{\underline{\hspace{#1}}}
+\newcommand{\blankline}{\par\noindent\blank{12cm}\par}
+% Figure flottante classique (diagrammes hauts)
+\newcommand{\figmmd}[2]{%
+  \begin{figure}[htbp]
+    \centering
+    \IfFileExists{figures/out/#1.png}{%
+      \includegraphics[width=\linewidth,height=0.68\textheight,keepaspectratio]{figures/out/#1.png}%
+    }{%
+      \fbox{\parbox{0.9\linewidth}{\centering\textit{Diagramme #1 --- exécuter \texttt{scripts/render-mermaid.sh}}}}%
+    }
+    \caption{#2}
+    \label{fig:#1}
+  \end{figure}%
+}
+% Figure ancrée (diagrammes plats : pas de page quasi vide)
+\newcommand{\figmmdhere}[2]{%
+  \begin{figure}[H]
+    \centering
+    \vspace{-0.4em}
+    \IfFileExists{figures/out/#1.png}{%
+      \includegraphics[width=\linewidth,keepaspectratio]{figures/out/#1.png}%
+    }{%
+      \fbox{\parbox{0.9\linewidth}{\centering\textit{Diagramme #1 --- exécuter \texttt{scripts/render-mermaid.sh}}}}%
+    }
+    \caption{#2}
+    \label{fig:#1}
+    \vspace{-0.6em}
+  \end{figure}%
+}
+% Capture ancrée [H] : évite les sections vides (figures qui flottent loin du titre)
+\newcommand{\figshot}[2]{%
+  \begin{figure}[H]
+    \centering
+    \vspace{-0.2em}
+    \IfFileExists{figures/screenshots/#1.png}{%
+      \includegraphics[width=0.88\linewidth,height=0.52\textheight,keepaspectratio]{figures/screenshots/#1.png}%
+    }{%
+      \fbox{\parbox[c][0.22\textheight][c]{0.9\linewidth}{%
+        \centering
+        \textbf{Capture à ajouter}\\[0.6em]
+        \texttt{figures/screenshots/#1.png}\\[0.8em]
+        \textit{#2}%
+      }}%
+    }
+    \caption{#2}
+    \label{fig:shot-#1}
+    \vspace{-0.4em}
+  \end{figure}%
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small ENSI Tanger --- Projet tutoré}
+\fancyhead[R]{\small LogiFlow TMS}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\begin{document}
+
+\input{chapitres/00-couverture}
+
+\input{chapitres/00-frontmatter}
+
+\clearpage
+\listoffigures
+\clearpage
+\listoftables
+\clearpage
+\tableofcontents
+\clearpage
+
+\input{chapitres/01-intro}
+\input{chapitres/02-conception}
+\input{chapitres/03-architecture}
+\input{chapitres/04-frontend}
+\input{chapitres/04b-captures}
+\input{chapitres/05-backend}
+\input{chapitres/06-ia}
+\input{chapitres/07-infra}
+\input{chapitres/08-securite}
+\input{chapitres/09-conclusion}
+
+\appendix
+\input{chapitres/a-glossaire}
+\input{chapitres/b-adr}
+
+\printbibliography[heading=bibintoc,title={Bibliographie}]
+
+\end{document}

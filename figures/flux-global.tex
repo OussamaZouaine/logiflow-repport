@@ -1,0 +1,24 @@
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[
+  font=\small,
+  box/.style={draw, rounded corners=2pt, align=center, inner sep=6pt, minimum width=2.6cm},
+  arr/.style={-{Latex}, thick}
+]
+\node[box, fill=blue!8] (u) {Utilisateur};
+\node[box, fill=green!12, right=1.3cm of u] (fe) {Angular\\nginx};
+\node[box, fill=orange!12, right=1.3cm of fe] (be) {Spring Boot\\:8080};
+\node[box, fill=purple!10, right=1.3cm of be] (ai) {Flask\\Ollama / OSRM};
+\node[box, fill=gray!15, below=1.1cm of be] (pg) {PostgreSQL};
+
+\draw[arr] (u) -- node[above] {HTTP(S)} (fe);
+\draw[arr] (fe) -- node[above] {JWT / API} (be);
+\draw[arr] (be) -- node[above, align=center] {clé interne\\:8000} (ai);
+\draw[arr] (be) -- (pg);
+
+\node[below=0.15cm of fe, font=\scriptsize\itshape, text width=2.8cm, align=center]
+  {jamais d'appel direct vers Flask};
+\end{tikzpicture}
+\caption{Flux d'une requête : le navigateur n'atteint que le frontend et Spring Boot.}
+\label{fig:flux-global}
+\end{figure}

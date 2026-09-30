@@ -1,0 +1,123 @@
+\chapter{Introduction générale}
+\label{chap:intro}
+
+\section{Contexte}
+
+Le transport routier de marchandises repose sur un enchaînement d'objets métier distincts : une demande commerciale, un dossier transportable et facturable, puis une exécution physique (véhicule, remorque, chauffeur, étapes de trajet). Sans système dédié, ces objets se mélangent dans des tableurs, les rôles (exploitation, atelier, commercial, chauffeur) n'ont pas la même vue, et les aides algorithmiques (itinéraire, groupage, assistant) restent collées au navigateur ou à une API LLM tierce.
+
+LogiFlow est un \emph{Transport Management System} (TMS) conçu pour ce cycle, dans le cadre d'un \textbf{projet tutoré} à l'ENSI Tanger (équipe de quatre étudiants, filière Génie informatique). L'objectif est une base professionnelle : domaine explicite, API typée, discipline architecturale vérifiée en CI, agents IA isolés, et un déploiement cloud reproductible.
+
+\section{Problématique}
+
+Comment concevoir une plateforme TMS web unique, sécurisée et évolutive, qui :
+\begin{enumerate}[leftmargin=*]
+  \item sépare clairement commercial, transportable et exécution ;
+  \item adapte l'interface aux six rôles métier sans multiplier les applications ;
+  \item intègre l'IA (copilote, planification, itinéraire) sans exposer le service LLM au navigateur ;
+  \item déploie sur le cloud avec une surface d'attaque maîtrisée ?
+\end{enumerate}
+
+\section{Objectifs}
+
+\begin{enumerate}[leftmargin=*]
+  \item Fournir une application web unique, filtrée par \textbf{rôle}.
+  \item Encapsuler le métier dans un backend Java \textbf{modulaire} (Spring Modulith) et \textbf{hexagonal} au sein de chaque module \cite{evans2003,cockburn2005,springmodulith}.
+  \item Isoler l'intelligence artificielle (LLM cloud compatible OpenAI, routing OSRM) derrière le backend : le navigateur ne parle jamais au service Flask.
+  \item Authentifier via Keycloak (OIDC + PKCE, MFA côté IdP) et valider le JWT côté Spring.
+  \item Décrire et provisionner l'infrastructure AWS par code (Terraform + Ansible), sans SSH exposé.
+\end{enumerate}
+
+\section{Organisation des dépôts}
+
+\begin{table}[H]
+\centering
+\caption{Dépôts LogiFlow et rôle de chacun.}
+\label{tab:repos}
+\begin{tabular}{@{}ll@{}}
+\toprule
+Dépôt & Rôle \\
+\midrule
+\repo{logiflow-frontend} & SPA Angular (UI, auth OIDC, App Shell) \\
+\repo{logiflow-backend} & API Spring Boot, PostgreSQL, façade IA \\
+\repo{logiflow-ai-service} & Agents Flask + LLM cloud + OSRM \\
+\repo{logiflow-infra} & Terraform (AWS) + Ansible (déploiement) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Cette séparation permet de versionner l'infrastructure indépendamment du code : un \texttt{terraform apply} ne rebuild pas l'application ; la CI applicative publie une image Docker sur GHCR, Ansible ne fait que la \emph{pull}.
+
+\section{Conduite du projet}
+
+\subsection{Méthodologie}
+
+Le projet suit une approche \textbf{agile} adaptée à une équipe de quatre : sprints courts, livraisons incrémentales (référentiels $\rightarrow$ cycle commande--dossier--voyage $\rightarrow$ IA $\rightarrow$ infra), revues régulières avec l'encadrant.
+
+\subsection{Répartition des rôles}
+
+\begin{table}[H]
+\centering
+\caption{Rôles et responsabilités de l'équipe LogiFlow.}
+\label{tab:repartition}
+\small
+\begin{tabular}{@{}clp{3.4cm}p{5.6cm}@{}}
+\toprule
+\# & Membre & Rôle(s) & Responsabilités principales \\
+\midrule
+1 & STITOU Ibrahim
+  & Chef de projet ;\newline Responsable Backend
+  & Coordination de l'équipe, suivi du planning, communication avec l'encadrant ;\newline API Spring Boot, base de données \\[0.65em]
+2 & ZOUAINE Oussama
+  & Responsable Frontend ;\newline Responsable Infra / DevOps
+  & Angular, UI/UX, intégration API ;\newline Docker, CI/CD, déploiement AWS \\[0.65em]
+3 & RAHALI Hamza
+  & Responsable Sécurité
+  & Authentification, gestion des accès, sécurité applicative \\[0.65em]
+4 & ES-SEMLLALI Oussama
+  & Responsable IA
+  & Développement et intégration des fonctionnalités IA \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Planning}
+
+Le diagramme de Gantt global croise \textbf{six volets} (cadre, conception, backend, frontend, IA, infra/qualité) avec des \textbf{jalons} de revue et de livraison. Les flux backend et frontend démarrent en parallèle après la revue de conception ; l'IA et l'infra s'appuient sur le socle API.
+
+\figmmdhere{planning-gantt}{Diagramme de Gantt global du projet tutoré : sprints parallèles, dépendances et jalons.}
+
+\begin{table}[H]
+\centering
+\caption{Jalons clés du planning.}
+\label{tab:jalons}
+\small
+\begin{tabular}{@{}llp{7.2cm}@{}}
+\toprule
+Jalon & Cible & Livrable attendu \\
+\midrule
+Kick-off & Début projet & Périmètre, rôles équipe, outillage \\
+Revue conception & Fin février & Glossaire, use cases, backlog priorisé \\
+Démo intermédiaire & Fin mars & Cycle commande--voyage utilisable \\
+Démo finale & Fin avril & IA + infra + parcours rôle complets \\
+Dépôt rapport & Fin avril & PDF + sources + captures \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Les weekends sont exclus du Gantt pour coller au rythme scolaire.
+
+\subsection{Plannings individuels}
+
+Chaque membre dispose d'un Gantt aligné sur ses rôles, avec les mêmes jalons d'équipe (revue conception, démos, dépôt).
+
+\figmmdhere{gantt-stitou}{Gantt individuel --- STITOU Ibrahim (chef de projet et responsable backend).}
+
+\figmmdhere{gantt-zouaine}{Gantt individuel --- ZOUAINE Oussama (responsable frontend et infrastructure / DevOps).}
+
+\figmmdhere{gantt-rahali}{Gantt individuel --- RAHALI Hamza (responsable sécurité).}
+
+\figmmdhere{gantt-essemllali}{Gantt individuel --- ES-SEMLLALI Oussama (responsable intelligence artificielle).}
+
+\section{Plan du rapport}
+
+Le chapitre~\ref{chap:conception} pose le domaine et les exigences. Le chapitre~\ref{chap:architecture} donne la vue d'ensemble. Les chapitres~\ref{chap:frontend} à~\ref{chap:infra} détaillent frontend, backend, IA et infrastructure. Le chapitre~\ref{chap:securite} traite de la sécurité. Les annexes reprennent le glossaire métier et les décisions d'architecture (ADR).

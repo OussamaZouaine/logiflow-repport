@@ -1,0 +1,35 @@
+flowchart TB
+  subgraph actors [Acteurs]
+    ADM[ADMINISTRATEUR]
+    RESP[RESPONSABLE_EXPLOITATION]
+    EXP[EXPLOITANT]
+    COM[COMMERCIAL]
+    ATE[ATELIER]
+    CHA[CHAUFFEUR]
+  end
+
+  subgraph uc [Cas_d_usage]
+    U1[Provisionner_utilisateurs]
+    U2[Gerer_referentiels]
+    U3[Creer_commande]
+    U4[Ouvrir_dossier]
+    U5[Planifier_voyage]
+    U6[Suivre_execution]
+    U7[Saisir_carburant]
+    U8[Gerer_OT_maintenance]
+    U9[Copilote_IA]
+  end
+
+  ADM --> U1
+  ADM --> U2
+  COM --> U3
+  EXP --> U4
+  EXP --> U5
+  RESP --> U5
+  RESP --> U6
+  CHA --> U6
+  CHA --> U7
+  ATE --> U8
+  EXP --> U9
+  RESP --> U9
+  ADM --> U9

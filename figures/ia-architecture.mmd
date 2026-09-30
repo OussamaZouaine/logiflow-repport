@@ -1,0 +1,33 @@
+flowchart TB
+  NG[Angular]
+  SB[Spring_Boot_BFF]
+  subgraph Flask [logiflow_ai_service]
+    API["/internal/ai/v1"]
+    COP[Copilote_Orchestrateur]
+    PLAN[Planification_Solveur]
+    MAINT[Maintenance_Analyse]
+    ITI[Itinerary_OSRM]
+    LLM[LlmClient]
+    TOOLS[BoiteOutils]
+  end
+  PGA[(Postgres_logiflow_ai_pgvector)]
+  GROQ[LLM_cloud]
+  OSRM[OSRM]
+  PG[(Postgres_TMS)]
+
+  NG -->|JWT_/api/v1/ia| SB
+  SB -->|X_Internal_Api_Key| API
+  API --> COP
+  API --> PLAN
+  API --> MAINT
+  API --> ITI
+  COP --> LLM
+  COP --> TOOLS
+  TOOLS -->|callback_cle| SB
+  COP --> PGA
+  PLAN --> OSRM
+  PLAN --> LLM
+  MAINT --> LLM
+  ITI --> OSRM
+  LLM --> GROQ
+  SB --> PG
